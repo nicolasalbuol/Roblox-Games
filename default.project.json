@@ -1,0 +1,42 @@
+{
+  "name": "ChromaTurf",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "Shared": { "$path": "src/shared" }
+    },
+    "ServerScriptService": {
+      "Server": { "$path": "src/server" }
+    },
+    "StarterPlayer": {
+      "$properties": {
+        "CharacterWalkSpeed": 22,
+        "CameraMaxZoomDistance": 120,
+        "LoadCharacterAppearance": true
+      },
+      "StarterPlayerScripts": {
+        "Client": { "$path": "src/client" }
+      }
+    },
+    "Players": {
+      "$properties": { "RespawnTime": 2 }
+    },
+    "Lighting": {
+      "$properties": {
+        "Technology": "ShadowMap",
+        "GlobalShadows": true,
+        "Brightness": 2,
+        "ClockTime": 20
+      }
+    },
+    "Workspace": {
+      "$properties": {
+        "StreamingEnabled": false,
+        "Gravity": 196.2
+      }
+    },
+    "SoundService": {
+      "$properties": { "RespectFilteringEnabled": true }
+    }
+  }
+}
