@@ -4,4 +4,5 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 mkdir -p release
 rojo build default.project.json -o release/ChromaTurf.rbxlx
-echo "Built release/ChromaTurf.rbxlx"
+rojo build default.project.json -o release/ChromaTurf.rbxl
+echo "Built release/ChromaTurf.rbxl and release/ChromaTurf.rbxlx"

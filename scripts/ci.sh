@@ -7,5 +7,5 @@ echo "== lint";    selene src
 echo "== format";  stylua --check src tests scripts
 echo "== tests";   lune run tests/run.luau
 echo "== build";   mkdir -p release && rojo build default.project.json -o release/ChromaTurf.rbxlx
-echo "== verify";  lune run scripts/verify-place.luau release/ChromaTurf.rbxlx
+echo "== verify";  rojo build default.project.json -o release/ChromaTurf.rbxl && lune run scripts/verify-place.luau release/ChromaTurf.rbxl && lune run scripts/verify-place.luau release/ChromaTurf.rbxlx
 echo "ALL CHECKS PASSED"

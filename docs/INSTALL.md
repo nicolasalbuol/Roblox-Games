@@ -3,7 +3,7 @@
 ## Opção A — só abrir o jogo
 
 O arquivo pronto está versionado: abra
-`release/ChromaTurf.rbxlx` no Roblox Studio (File → Open from File). Para regenerar: `./scripts/build.sh`.
+`release/ChromaTurf.rbxl` (ou `.rbxlx`) no Roblox Studio (File → Open from File). Para regenerar: `./scripts/build.sh`.
 
 ## Opção B — ambiente de desenvolvimento
 
