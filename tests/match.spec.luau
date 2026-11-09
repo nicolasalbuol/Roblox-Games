@@ -199,12 +199,25 @@ return function(t)
 			bots += 1
 		end
 		t.eq(bots, Config.Match.MinParticipants, "bots fill the round")
-		for k = 1, Config.Match.RoundSeconds * Config.Match.TickRate do
+		local tickTime, ticks = 0, Config.Match.RoundSeconds * Config.Match.TickRate
+		for k = 1, ticks do
+			local t0 = os.clock()
 			tick()
+			tickTime += os.clock() - t0
 			if k % 100 == 0 then
 				checkInvariants(t)
 			end
 		end
+		local deltaBytes, botBytes = 0, 0
+		for _, e in events do
+			if e.name == "Delta" then
+				deltaBytes += buffer.len(e.payload)
+			elseif e.name == "BotPos" then
+				botBytes += buffer.len(e.payload)
+			end
+		end
+		print(string.format("    perf (Lune, not Roblox): %.3f ms/tick avg; grid deltas %.0f B/s; bot packets %.0f B/s",
+			tickTime / ticks * 1000, deltaBytes / Config.Match.RoundSeconds, botBytes / Config.Match.RoundSeconds))
 		local claimed = 0
 		for slot in Match.participants do
 			claimed += Match.grid:countOf(slot)
@@ -212,6 +225,16 @@ return function(t)
 		t.ok(claimed > 300, "bots claimed territory (" .. claimed .. ")")
 		t.ok(countEvents("spawn") >= bots, "spawn events")
 		print(string.format("    sim: %d tiles owned at end, %d eliminations, %d delta packets", claimed, countEvents("elim"), #events))
+		-- EXPORT_SIM=path writes the final grid so marketing art can be rendered from a real simulated round.
+		local exportPath = require("@lune/process").env.EXPORT_SIM
+		if exportPath then
+			local colors = {}
+			for slot, p in Match.participants do
+				colors[tostring(slot)] = { math.floor(p.color.R * 255), math.floor(p.color.G * 255), math.floor(p.color.B * 255) }
+			end
+			local out = { size = Match.grid.size, owner = Match.grid.owner, trail = Match.grid.trail, colors = colors }
+			require("@lune/fs").writeFile(exportPath, require("@lune/serde").encode("json", out))
+		end
 		Match:_endRound()
 		t.eq(next(Match.participants), nil, "round cleared")
 		t.eq(Match.state, "Intermission")

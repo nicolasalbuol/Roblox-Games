@@ -1,11 +1,11 @@
 -- Opens the built place file and checks the instance tree Studio will load.
--- Usage: lune run scripts/verify-place.luau build/ChromaTurf.rbxlx
+-- Usage: lune run scripts/verify-place.luau release/ChromaTurf.rbxlx
 local fs = require("@lune/fs")
 local luau = require("@lune/luau")
 local process = require("@lune/process")
 local roblox = require("@lune/roblox")
 
-local path = process.args[1] or "build/ChromaTurf.rbxlx"
+local path = process.args[1] or "release/ChromaTurf.rbxlx"
 local game = roblox.deserializePlace(fs.readFile(path))
 local failures = 0
 local function expect(cond, msg)

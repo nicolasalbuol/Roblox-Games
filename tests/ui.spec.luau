@@ -9,92 +9,9 @@ local Vector2 = roblox.Vector2
 
 local function noop() end
 
-local function signal()
-	local handlers = {}
-	return {
-		Connect = function(_, fn)
-			table.insert(handlers, fn)
-			return { Disconnect = noop }
-		end,
-		Wait = noop,
-		Fire = function(_, ...)
-			for _, fn in handlers do
-				fn(...)
-			end
-		end,
-	}
-end
-
--- Instance proxy: property reads/writes and methods hit the real Lune instance (validated);
--- events that Lune lacks return fake signals.
-local EVENTS = {
-	MouseEnter = true,
-	MouseLeave = true,
-	MouseButton1Down = true,
-	MouseButton1Up = true,
-	Activated = true,
-	DescendantAdded = true,
-	Completed = true,
-}
-local proxyOf = setmetatable({}, { __mode = "k" })
-local realOf = setmetatable({}, { __mode = "k" })
-local wrap
-
-local function unwrap(v)
-	return realOf[v] or v
-end
-
-wrap = function(real, extra)
-	if typeof(real) ~= "Instance" then
-		return real
-	end
-	if proxyOf[real] then
-		return proxyOf[real]
-	end
-	local events = {}
-	local proxy = setmetatable({}, {
-		__index = function(_, k)
-			if extra and extra[k] ~= nil then
-				return extra[k]
-			end
-			if EVENTS[k] then
-				events[k] = events[k] or signal()
-				return events[k]
-			end
-			if k == "GetPropertyChangedSignal" then
-				return function()
-					return signal()
-				end
-			end
-			local v = real[k]
-			if type(v) == "function" then
-				return function(_, ...)
-					local args = table.pack(...)
-					for i = 1, args.n do
-						args[i] = unwrap(args[i])
-					end
-					local res = table.pack(v(real, table.unpack(args, 1, args.n)))
-					for i = 1, res.n do
-						if type(res[i]) == "table" then
-							for j, x in res[i] do
-								res[i][j] = wrap(x)
-							end
-						else
-							res[i] = wrap(res[i])
-						end
-					end
-					return table.unpack(res, 1, res.n)
-				end
-			end
-			return wrap(v)
-		end,
-		__newindex = function(_, k, v)
-			real[k] = unwrap(v)
-		end,
-	})
-	proxyOf[real], realOf[proxy] = proxy, real
-	return proxy
-end
+local Fakes = require("./fakes")
+local signal, wrap = Fakes.signal, Fakes.wrap
+local realOf = Fakes.realOf
 
 local created = 0
 Loader.env.TweenInfo = { new = function()

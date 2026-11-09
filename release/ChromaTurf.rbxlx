@@ -1,0 +1,5631 @@
+<roblox version="4">
+  <Item class="Lighting" referent="0">
+    <Properties>
+      <string name="Name">Lighting</string>
+      <float name="Brightness">2</float>
+      <float name="ClockTime">20</float>
+      <bool name="GlobalShadows">true</bool>
+      <token name="Technology">3</token>
+    </Properties>
+  </Item>
+  <Item class="Players" referent="1">
+    <Properties>
+      <string name="Name">Players</string>
+      <float name="RespawnTime">2</float>
+    </Properties>
+  </Item>
+  <Item class="ReplicatedStorage" referent="2">
+    <Properties>
+      <string name="Name">ReplicatedStorage</string>
+    </Properties>
+    <Item class="Folder" referent="3">
+      <Properties>
+        <string name="Name">Shared</string>
+      </Properties>
+      <Item class="ModuleScript" referent="4">
+        <Properties>
+          <string name="Name">Config</string>
+          <string name="Source"><![CDATA[-- Central tuning for Chroma Turf. Every gameplay, economy and store number lives here.
+-- Values marked HYPOTHESIS are launch guesses that must be validated with analytics.
+
+local Config = {}
+
+Config.GameName = "Chroma Turf"
+Config.Version = "1.0.0"
+
+Config.Grid = {
+	Size = 40, -- cells per side (1600 cells)
+	TileSize = 6, -- studs per cell
+	FloorY = 0, -- world Y of the arena floor top
+}
+Config.Grid.Extent = Config.Grid.Size * Config.Grid.TileSize -- 240 studs
+Config.Grid.OriginX = -Config.Grid.Extent / 2
+Config.Grid.OriginZ = -Config.Grid.Extent / 2
+
+Config.Match = {
+	TickRate = 10, -- server simulation ticks per second
+	RoundSeconds = 180,
+	IntermissionSeconds = 15,
+	RespawnSeconds = 3,
+	SpawnRadius = 2, -- start zone is (2r+1)^2 = 25 cells
+	MinParticipants = 6, -- bots fill the round up to this many
+	MaxBots = 6,
+	TrailGrace = 2, -- newest trail cells that never self-cut (tile-boundary jitter)
+	MaxPaintHeight = 14, -- studs above floor; higher than this does not paint
+	SpeedTolerance = 1.6, -- allowed multiple of expected speed before a tick is ignored
+	SpeedSlack = 10, -- studs/s of extra slack for physics/lag
+	WinMinParticipants = 3, -- a win only counts with at least this many participants
+	HubPosition = { 0, 0, -205 }, -- x, y, z of the hub platform centre
+}
+
+Config.Movement = {
+	WalkSpeed = 22,
+	DashMultiplier = 1.5,
+	BotSpeed = 18,
+}
+
+Config.Powerups = {
+	MaxActive = 4,
+	SpawnInterval = 9,
+	PickupRadius = 5,
+	Dash = { duration = 3.5 },
+	Shield = { duration = 6 },
+	Bomb = { radius = 2 },
+}
+
+-- HYPOTHESIS: one round ~ 40-70 coins; an average cosmetic ~ 1 hour of play.
+Config.Economy = {
+	BaseCoins = 10,
+	CoinsPerPercent = 1.5,
+	CoinsPerKill = 5,
+	PlacementCoins = { 30, 20, 10 },
+	BaseXp = 50,
+	XpPerPercent = 2,
+	XpPerKill = 10,
+	VipCoinBonus = 0.25,
+	DoubleCoinsBonus = 1.0,
+	MaxCoins = 100000000,
+	DailyRewards = { 50, 75, 100, 125, 150, 200, 400 },
+}
+
+Config.Progression = {
+	MaxLevel = 100,
+	XpBase = 100,
+	XpPerLevel = 40,
+	LevelUpCoins = 25,
+}
+
+-- Roblox Creator Hub IDs. 0 = not configured yet: the store shows the item as unavailable
+-- and never prompts. See docs/EXTERNAL_SETUP.md.
+Config.Monetization = {
+	GamePasses = {
+		VIP = { id = 0, price = 199, name = "VIP", description = "Gold name, VIP title, Royal Gold ink and +25% coins." },
+		DoubleCoins = { id = 0, price = 299, name = "Double Coins", description = "Earn 2x coins from every round, forever." },
+		PrismPack = { id = 0, price = 149, name = "Prism Pack", description = "Rainbow Prism trail and the Prismatic title." },
+	},
+	-- HYPOTHESIS prices; the store always displays the live Roblox price when available.
+	Products = {
+		CoinsSmall = { id = 0, price = 49, coins = 500, name = "Pocket of Coins" },
+		CoinsMedium = { id = 0, price = 99, coins = 1200, name = "Bag of Coins" },
+		CoinsLarge = { id = 0, price = 249, coins = 3500, name = "Chest of Coins" },
+		CoinsHuge = { id = 0, price = 499, coins = 8000, name = "Vault of Coins" },
+	},
+}
+
+-- Optional Roblox badges awarded alongside in-game achievements (0 = disabled).
+Config.Badges = {
+	first_loop = 0,
+	big_loop = 0,
+	first_win = 0,
+	trail_cutter = 0,
+	land_baron = 0,
+}
+
+-- Built-in client sounds so the game has feedback with zero uploads.
+-- Replace with uploaded original SFX ("rbxassetid://...") before launch; see KNOWN_ISSUES.md.
+Config.Audio = {
+	Click = "rbxasset://sounds/electronicpingshort.wav",
+	Capture = "rbxasset://sounds/electronicpingshort.wav",
+	Splat = "rbxasset://sounds/uuhhh.mp3",
+	Pickup = "rbxasset://sounds/electronicpingshort.wav",
+	RoundStart = "rbxasset://sounds/electronicpingshort.wav",
+	Music = "", -- empty: no music until an original track is uploaded
+}
+
+Config.Data = {
+	StoreName = "ChromaTurf_Profiles_v1",
+	LeaderboardStore = "ChromaTurf_Wins_v1",
+	AutosaveSeconds = 90,
+	LockStaleSeconds = 600, -- a session lock older than this is considered abandoned
+	LoadAttempts = 8,
+	LoadRetryDelay = 3,
+	MaxReceiptHistory = 60,
+}
+
+Config.RateLimits = {
+	Request = { capacity = 10, refillPerSecond = 4 },
+	ClientEvent = { capacity = 20, refillPerSecond = 5 },
+}
+
+return Config
+]]></string>
+        </Properties>
+      </Item>
+      <Item class="ModuleScript" referent="5">
+        <Properties>
+          <string name="Name">Cosmetics</string>
+          <string name="Source"><![CDATA[-- Cosmetic catalog. Cosmetics never change gameplay. Colors are {r, g, b} (0-255).
+-- unlock.type: "default" | "coins" (price) | "level" (level) | "achievement" (id) | "pass" (pass key)
+
+local Cosmetics = {}
+
+Cosmetics.Inks = {
+	{ id = "ink_mint", name = "Mint", color = { 62, 240, 178 }, unlock = { type = "default" } },
+	{ id = "ink_sky", name = "Sky", color = { 72, 170, 255 }, unlock = { type = "default" } },
+	{ id = "ink_coral", name = "Coral", color = { 255, 104, 104 }, unlock = { type = "default" } },
+	{ id = "ink_lemon", name = "Lemon", color = { 255, 224, 72 }, unlock = { type = "coins", price = 250 } },
+	{ id = "ink_grape", name = "Grape", color = { 160, 98, 255 }, unlock = { type = "coins", price = 250 } },
+	{ id = "ink_tangerine", name = "Tangerine", color = { 255, 150, 50 }, unlock = { type = "coins", price = 400 } },
+	{ id = "ink_bubblegum", name = "Bubblegum", color = { 255, 120, 205 }, unlock = { type = "coins", price = 400 } },
+	{ id = "ink_lime", name = "Lime", color = { 160, 236, 60 }, unlock = { type = "coins", price = 600 } },
+	{ id = "ink_ocean", name = "Ocean", color = { 30, 120, 200 }, unlock = { type = "coins", price = 600 } },
+	{ id = "ink_cherry", name = "Cherry", color = { 210, 30, 70 }, unlock = { type = "coins", price = 800 } },
+	{ id = "ink_lavender", name = "Lavender", color = { 200, 170, 255 }, unlock = { type = "coins", price = 800 } },
+	{ id = "ink_ice", name = "Glacier", color = { 170, 240, 255 }, unlock = { type = "level", level = 10 } },
+	{ id = "ink_toxic", name = "Toxic", color = { 110, 255, 40 }, unlock = { type = "coins", price = 1200 } },
+	{ id = "ink_ember", name = "Ember", color = { 240, 80, 20 }, unlock = { type = "level", level = 25 } },
+	{ id = "ink_gold", name = "Royal Gold", color = { 255, 196, 40 }, unlock = { type = "pass", pass = "VIP" } },
+	{ id = "ink_shadow", name = "Midnight", color = { 90, 80, 150 }, unlock = { type = "achievement", id = "land_baron" } },
+}
+
+-- kind: "trail" (Roblox Trail), "sparkles", "fire", "smoke", "particles"
+Cosmetics.Trails = {
+	{ id = "fx_none", name = "None", kind = "none", unlock = { type = "default" } },
+	{ id = "fx_glow", name = "Ink Glow", kind = "trail", unlock = { type = "level", level = 3 } },
+	{ id = "fx_comet", name = "Comet Tail", kind = "trail", long = true, unlock = { type = "coins", price = 900 } },
+	{ id = "fx_sparkle", name = "Sparkle Dust", kind = "sparkles", unlock = { type = "coins", price = 600 } },
+	{ id = "fx_smoke", name = "Puff Cloud", kind = "smoke", unlock = { type = "coins", price = 700 } },
+	{ id = "fx_flame", name = "Blaze", kind = "fire", unlock = { type = "coins", price = 1500 } },
+	{ id = "fx_star", name = "Starfall", kind = "particles", unlock = { type = "level", level = 20 } },
+	{ id = "fx_prism", name = "Prism", kind = "trail", rainbow = true, unlock = { type = "pass", pass = "PrismPack" } },
+}
+
+Cosmetics.Titles = {
+	{ id = "title_none", name = "", unlock = { type = "default" } },
+	{ id = "title_rookie", name = "Rookie", unlock = { type = "default" } },
+	{ id = "title_artist", name = "Loop Artist", unlock = { type = "coins", price = 500 } },
+	{ id = "title_boss", name = "Turf Boss", unlock = { type = "coins", price = 1200 } },
+	{ id = "title_snapper", name = "Trail Snapper", unlock = { type = "achievement", id = "trail_cutter" } },
+	{ id = "title_champion", name = "Champion", unlock = { type = "achievement", id = "first_win" } },
+	{ id = "title_baron", name = "Land Baron", unlock = { type = "achievement", id = "land_baron" } },
+	{ id = "title_legend", name = "Legend", unlock = { type = "level", level = 30 } },
+	{ id = "title_vip", name = "VIP", unlock = { type = "pass", pass = "VIP" } },
+	{ id = "title_prism", name = "Prismatic", unlock = { type = "pass", pass = "PrismPack" } },
+}
+
+Cosmetics.Categories = {
+	ink = Cosmetics.Inks,
+	trail = Cosmetics.Trails,
+	title = Cosmetics.Titles,
+}
+
+Cosmetics.Defaults = { ink = "ink_mint", trail = "fx_none", title = "title_rookie" }
+
+local byId = {}
+for category, list in Cosmetics.Categories do
+	for _, item in list do
+		assert(byId[item.id] == nil, "duplicate cosmetic id " .. item.id)
+		item.category = category
+		byId[item.id] = item
+	end
+end
+
+function Cosmetics.get(id: string)
+	return byId[id]
+end
+
+-- Can this profile use the item right now (owned or unlocked by level/achievement/pass)?
+function Cosmetics.isUnlocked(data, passes: { [string]: boolean }, item): boolean
+	local u = item.unlock
+	if u.type == "default" then
+		return true
+	elseif u.type == "coins" then
+		return data.owned[item.id] == true
+	elseif u.type == "level" then
+		return data.level >= u.level
+	elseif u.type == "achievement" then
+		return data.achievements[u.id] ~= nil
+	elseif u.type == "pass" then
+		return passes[u.pass] == true
+	end
+	return false
+end
+
+return Cosmetics
+]]></string>
+        </Properties>
+      </Item>
+      <Item class="ModuleScript" referent="6">
+        <Properties>
+          <string name="Name">Grid</string>
+          <string name="Source"><![CDATA[-- Pure territory grid shared by server (authority) and client (rendering mirror).
+-- owner[i]: 0 neutral, -1 blocked, >0 participant slot. trail[i]: 0 or slot.
+
+local Grid = {}
+Grid.__index = Grid
+
+Grid.BLOCKED = -1
+
+function Grid.new(size: number)
+	local n = size * size
+	return setmetatable({
+		size = size,
+		n = n,
+		owner = table.create(n, 0),
+		trail = table.create(n, 0),
+		counts = {},
+		blocked = 0,
+		dirtyList = {},
+		dirtyFlag = table.create(n, false),
+	}, Grid)
+end
+
+function Grid:index(x: number, z: number): number
+	return (z - 1) * self.size + x
+end
+
+function Grid:coords(i: number): (number, number)
+	local z = (i - 1) // self.size + 1
+	return i - (z - 1) * self.size, z
+end
+
+function Grid:inBounds(x: number, z: number): boolean
+	return x >= 1 and z >= 1 and x <= self.size and z <= self.size
+end
+
+function Grid:_mark(i: number)
+	if not self.dirtyFlag[i] then
+		self.dirtyFlag[i] = true
+		table.insert(self.dirtyList, i)
+	end
+end
+
+function Grid:setOwner(i: number, v: number)
+	local old = self.owner[i]
+	if old == v then
+		return
+	end
+	if old > 0 then
+		self.counts[old] = (self.counts[old] or 0) - 1
+	elseif old == -1 then
+		self.blocked -= 1
+	end
+	if v > 0 then
+		self.counts[v] = (self.counts[v] or 0) + 1
+	elseif v == -1 then
+		self.blocked += 1
+	end
+	self.owner[i] = v
+	self:_mark(i)
+end
+
+function Grid:setTrail(i: number, v: number)
+	if self.trail[i] ~= v then
+		self.trail[i] = v
+		self:_mark(i)
+	end
+end
+
+function Grid:countOf(slot: number): number
+	return self.counts[slot] or 0
+end
+
+function Grid:claimable(): number
+	return self.n - self.blocked
+end
+
+function Grid:percentOf(slot: number): number
+	local c = self:claimable()
+	return c > 0 and self:countOf(slot) / c * 100 or 0
+end
+
+function Grid:takeDirty(): { number }
+	local list = self.dirtyList
+	for _, i in list do
+		self.dirtyFlag[i] = false
+	end
+	self.dirtyList = {}
+	return list
+end
+
+function Grid:reset()
+	for i = 1, self.n do
+		self:setOwner(i, 0)
+		self:setTrail(i, 0)
+	end
+end
+
+-- 4-connected walk from (x0,z0) to (x1,z1), excluding the start cell.
+-- 4-connectivity guarantees that two crossing paths always share a cell.
+function Grid:walk(x0: number, z0: number, x1: number, z1: number): { number }
+	local cells = {}
+	local dx, dz = math.abs(x1 - x0), math.abs(z1 - z0)
+	local sx, sz = if x1 > x0 then 1 else -1, if z1 > z0 then 1 else -1
+	local x, z, ix, iz = x0, z0, 0, 0
+	while ix < dx or iz < dz do
+		if (0.5 + ix) * dz < (0.5 + iz) * dx then
+			x += sx
+			ix += 1
+		else
+			z += sz
+			iz += 1
+		end
+		cells[#cells + 1] = self:index(x, z)
+	end
+	return cells
+end
+
+-- Turns slot's trail into territory and fills every region it encloses.
+-- Returns (cells gained, set of victim slots whose trail lay inside the enclosure).
+function Grid:capture(slot: number, trailCells: { number }): (number, { [number]: boolean })
+	local before = self:countOf(slot)
+	local owner, trail, size, n = self.owner, self.trail, self.size, self.n
+	for _, i in trailCells do
+		if trail[i] == slot then
+			self:setTrail(i, 0)
+		end
+		if owner[i] ~= -1 then
+			self:setOwner(i, slot)
+		end
+	end
+
+	-- Flood the "outside" from the border through every cell not owned by slot.
+	local visited = table.create(n, false)
+	local queue = {}
+	local function push(i)
+		if not visited[i] and owner[i] ~= slot then
+			visited[i] = true
+			queue[#queue + 1] = i
+		end
+	end
+	for x = 1, size do
+		push(x)
+		push((size - 1) * size + x)
+	end
+	for z = 2, size - 1 do
+		push((z - 1) * size + 1)
+		push(z * size)
+	end
+	local head = 1
+	while head <= #queue do
+		local i = queue[head]
+		head += 1
+		local x = (i - 1) % size + 1
+		if x > 1 then
+			push(i - 1)
+		end
+		if x < size then
+			push(i + 1)
+		end
+		if i > size then
+			push(i - size)
+		end
+		if i <= n - size then
+			push(i + size)
+		end
+	end
+
+	local victims = {}
+	for i = 1, n do
+		local o = owner[i]
+		if not visited[i] and o ~= slot and o ~= -1 then
+			local t = trail[i]
+			if t ~= 0 and t ~= slot then
+				victims[t] = true
+			end
+			self:setOwner(i, slot)
+		end
+	end
+	return self:countOf(slot) - before, victims
+end
+
+-- Claims a square around (cx,cz). Never touches blocked or trail cells.
+function Grid:claimSquare(slot: number, cx: number, cz: number, r: number): number
+	local gained = 0
+	for z = cz - r, cz + r do
+		for x = cx - r, cx + r do
+			if self:inBounds(x, z) then
+				local i = self:index(x, z)
+				if self.owner[i] ~= -1 and self.owner[i] ~= slot and self.trail[i] == 0 then
+					self:setOwner(i, slot)
+					gained += 1
+				end
+			end
+		end
+	end
+	return gained
+end
+
+-- Removes all territory and trail of slot. Returns cells freed.
+function Grid:clearSlot(slot: number, trailCells: { number }?): number
+	if trailCells then
+		for _, i in trailCells do
+			if self.trail[i] == slot then
+				self:setTrail(i, 0)
+			end
+		end
+	end
+	local freed = 0
+	for i = 1, self.n do
+		if self.owner[i] == slot then
+			self:setOwner(i, 0)
+			freed += 1
+		end
+		if self.trail[i] == slot then
+			self:setTrail(i, 0)
+		end
+	end
+	return freed
+end
+
+function Grid:_squareFree(cx: number, cz: number, r: number, strict: boolean): boolean
+	for z = cz - r, cz + r do
+		for x = cx - r, cx + r do
+			local i = self:index(x, z)
+			if self.trail[i] ~= 0 or self.owner[i] == -1 or (strict and self.owner[i] ~= 0) then
+				return false
+			end
+		end
+	end
+	return true
+end
+
+-- Finds a spawn centre whose square is free. rng: function(min, max) -> integer.
+function Grid:findSpawn(r: number, rng: (number, number) -> number): (number, number)
+	local lo, hi = 1 + r, self.size - r
+	for pass = 1, 2 do
+		for _ = 1, 60 do
+			local cx, cz = rng(lo, hi), rng(lo, hi)
+			if self:_squareFree(cx, cz, r, pass == 1) then
+				return cx, cz
+			end
+		end
+	end
+	return rng(lo, hi), rng(lo, hi)
+end
+
+return Grid
+]]></string>
+        </Properties>
+      </Item>
+      <Item class="ModuleScript" referent="7">
+        <Properties>
+          <string name="Name">GridCodec</string>
+          <string name="Source"><![CDATA[-- Compact binary encoding of grid state for RemoteEvents (buffers replicate natively).
+-- Snapshot: 2 bytes per cell. Delta: 4 bytes per changed cell.
+
+local GridCodec = {}
+
+local function encodeSlot(v: number): number
+	return if v < 0 then 255 else v
+end
+
+local function decodeSlot(b: number): number
+	return if b == 255 then -1 else b
+end
+
+function GridCodec.snapshot(grid): buffer
+	local buf = buffer.create(grid.n * 2)
+	for i = 1, grid.n do
+		buffer.writeu8(buf, (i - 1) * 2, encodeSlot(grid.owner[i]))
+		buffer.writeu8(buf, (i - 1) * 2 + 1, grid.trail[i])
+	end
+	return buf
+end
+
+function GridCodec.applySnapshot(grid, buf: buffer)
+	for i = 1, grid.n do
+		grid:setOwner(i, decodeSlot(buffer.readu8(buf, (i - 1) * 2)))
+		grid:setTrail(i, buffer.readu8(buf, (i - 1) * 2 + 1))
+	end
+end
+
+function GridCodec.delta(grid, cells: { number }): buffer
+	local buf = buffer.create(#cells * 4)
+	for k, i in cells do
+		local o = (k - 1) * 4
+		buffer.writeu16(buf, o, i)
+		buffer.writeu8(buf, o + 2, encodeSlot(grid.owner[i]))
+		buffer.writeu8(buf, o + 3, grid.trail[i])
+	end
+	return buf
+end
+
+-- Applies a delta; returns the list of changed cell indices.
+function GridCodec.applyDelta(grid, buf: buffer): { number }
+	local changed = {}
+	for o = 0, buffer.len(buf) - 4, 4 do
+		local i = buffer.readu16(buf, o)
+		if i >= 1 and i <= grid.n then
+			grid:setOwner(i, decodeSlot(buffer.readu8(buf, o + 2)))
+			grid:setTrail(i, buffer.readu8(buf, o + 3))
+			changed[#changed + 1] = i
+		end
+	end
+	return changed
+end
+
+return GridCodec
+]]></string>
+        </Properties>
+      </Item>
+      <Item class="ModuleScript" referent="8">
+        <Properties>
+          <string name="Name">Maps</string>
+          <string name="Source"><![CDATA[-- Arena themes. Obstacles are inclusive cell rectangles {x1, z1, x2, z2} (1..Grid.Size) that block claiming.
+-- Colors are {r, g, b}.
+
+local Maps = {}
+
+Maps.List = {
+	{
+		id = "neon_plaza",
+		name = "Neon Plaza",
+		tileA = { 30, 34, 58 },
+		tileB = { 36, 41, 68 },
+		floor = { 22, 24, 42 },
+		wall = { 80, 230, 255 },
+		accent = { 255, 70, 200 },
+		obstacleMaterial = "Neon",
+		obstacleColor = { 120, 90, 255 },
+		decor = "towers",
+		lighting = {
+			ClockTime = 20.5,
+			Ambient = { 70, 60, 110 },
+			OutdoorAmbient = { 90, 80, 140 },
+			Brightness = 1.5,
+			Atmosphere = { 0.3, { 120, 90, 200 } },
+			Tint = { 245, 235, 255 },
+		},
+		obstacles = { { 12, 12, 13, 13 }, { 28, 12, 29, 13 }, { 12, 28, 13, 29 }, { 28, 28, 29, 29 } },
+	},
+	{
+		id = "sunset_docks",
+		name = "Sunset Docks",
+		tileA = { 196, 160, 118 },
+		tileB = { 182, 146, 104 },
+		floor = { 150, 112, 76 },
+		wall = { 255, 170, 90 },
+		accent = { 60, 170, 210 },
+		obstacleMaterial = "WoodPlanks",
+		obstacleColor = { 140, 92, 56 },
+		decor = "docks",
+		lighting = {
+			ClockTime = 17.6,
+			Ambient = { 120, 90, 70 },
+			OutdoorAmbient = { 160, 120, 90 },
+			Brightness = 2.2,
+			Atmosphere = { 0.35, { 255, 170, 120 } },
+			Tint = { 255, 240, 225 },
+		},
+		obstacles = { { 19, 19, 22, 22 }, { 8, 17, 9, 24 }, { 32, 17, 33, 24 } },
+	},
+	{
+		id = "frost_grid",
+		name = "Frost Grid",
+		tileA = { 214, 232, 245 },
+		tileB = { 198, 220, 238 },
+		floor = { 170, 200, 225 },
+		wall = { 140, 220, 255 },
+		accent = { 255, 255, 255 },
+		obstacleMaterial = "Glass",
+		obstacleColor = { 150, 220, 255 },
+		decor = "crystals",
+		lighting = {
+			ClockTime = 13,
+			Ambient = { 120, 140, 170 },
+			OutdoorAmbient = { 150, 170, 200 },
+			Brightness = 2.6,
+			Atmosphere = { 0.25, { 210, 235, 255 } },
+			Tint = { 235, 245, 255 },
+		},
+		obstacles = {
+			{ 6, 6, 7, 7 },
+			{ 34, 6, 35, 7 },
+			{ 6, 34, 7, 35 },
+			{ 34, 34, 35, 35 },
+			{ 19, 10, 22, 11 },
+			{ 19, 30, 22, 31 },
+		},
+	},
+}
+
+local byId = {}
+for _, m in Maps.List do
+	byId[m.id] = m
+end
+
+function Maps.get(id: string)
+	return byId[id]
+end
+
+-- Calls fn(x, z) for every blocked cell of the map.
+function Maps.forEachBlocked(map, fn: (number, number) -> ())
+	for _, r in map.obstacles do
+		for z = r[2], r[4] do
+			for x = r[1], r[3] do
+				fn(x, z)
+			end
+		end
+	end
+end
+
+return Maps
+]]></string>
+        </Properties>
+      </Item>
+      <Item class="ModuleScript" referent="9">
+        <Properties>
+          <string name="Name">Net</string>
+          <string name="Source"><![CDATA[-- Remote definitions. The server creates them; clients wait for them.
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+local Net = {}
+
+local DEFS = {
+	Request = "RemoteFunction", -- client -> server actions (buy, equip, claim...), validated + rate limited
+	ClientEvent = "RemoteEvent", -- client -> server telemetry hints (shop opened, tutorial step seen)
+	Profile = "RemoteEvent", -- server -> client: public profile snapshot
+	Match = "RemoteEvent", -- server -> client: match events (state, capture, elimination, results)
+	Roster = "RemoteEvent", -- server -> client: slot -> participant info
+	GridSnapshot = "RemoteEvent", -- server -> client: full grid buffer + map id
+	GridDelta = "RemoteEvent", -- server -> client: changed cells buffer
+	BotPos = "UnreliableRemoteEvent", -- server -> client: bot positions (lossy is fine)
+	Notify = "RemoteEvent", -- server -> client: toast messages
+}
+
+local folder
+if RunService:IsServer() then
+	folder = ReplicatedStorage:FindFirstChild("Remotes") or Instance.new("Folder")
+	folder.Name = "Remotes"
+	for name, class in DEFS do
+		if not folder:FindFirstChild(name) then
+			local r = Instance.new(class)
+			r.Name = name
+			r.Parent = folder
+		end
+	end
+	folder.Parent = ReplicatedStorage
+else
+	folder = ReplicatedStorage:WaitForChild("Remotes")
+end
+
+for name in DEFS do
+	Net[name] = folder:WaitForChild(name)
+end
+
+return Net
+]]></string>
+        </Properties>
+      </Item>
+      <Item class="ModuleScript" referent="10">
+        <Properties>
+          <string name="Name">Progression</string>
+          <string name="Source"><![CDATA[-- Pure progression rules: levels, round rewards, achievements, daily quests, daily reward.
+
+local Config = require(script.Parent.Config)
+
+local Progression = {}
+
+local P = Config.Progression
+local E = Config.Economy
+
+function Progression.xpToNext(level: number): number
+	return P.XpBase + P.XpPerLevel * (level - 1)
+end
+
+-- Adds xp; returns newLevel, newXp, levelsGained.
+function Progression.addXp(level: number, xp: number, gained: number): (number, number, number)
+	xp += math.max(0, math.floor(gained))
+	local start = level
+	while level < P.MaxLevel and xp >= Progression.xpToNext(level) do
+		xp -= Progression.xpToNext(level)
+		level += 1
+	end
+	if level >= P.MaxLevel then
+		level = P.MaxLevel
+		xp = math.min(xp, Progression.xpToNext(level))
+	end
+	return level, xp, level - start
+end
+
+-- result: { percent, rank, kills, participants }; multiplier >= 1 (passes).
+function Progression.roundRewards(result, multiplier: number): (number, number)
+	local percent = math.clamp(result.percent or 0, 0, 100)
+	local coins = E.BaseCoins + percent * E.CoinsPerPercent + (result.kills or 0) * E.CoinsPerKill
+	if (result.participants or 0) >= Config.Match.WinMinParticipants then
+		coins += E.PlacementCoins[result.rank] or 0
+	end
+	local xp = E.BaseXp + percent * E.XpPerPercent + (result.kills or 0) * E.XpPerKill
+	return math.floor(coins * math.max(1, multiplier)), math.floor(xp)
+end
+
+function Progression.coinMultiplier(passes: { [string]: boolean }): number
+	local m = 1
+	if passes.VIP then
+		m += E.VipCoinBonus
+	end
+	if passes.DoubleCoins then
+		m += E.DoubleCoinsBonus
+	end
+	return m
+end
+
+-- Achievements: check(data) -> boolean, evaluated against lifetime stats.
+Progression.Achievements = {
+	{ id = "first_loop", name = "First Loop", desc = "Close your first loop.", coins = 50, check = function(d)
+		return d.stats.captures >= 1
+	end },
+	{ id = "big_loop", name = "Big Loop", desc = "Claim 100+ tiles with one loop.", coins = 150, check = function(d)
+		return d.stats.bestLoop >= 100
+	end },
+	{ id = "first_win", name = "Champion", desc = "Win a round.", coins = 200, check = function(d)
+		return d.stats.wins >= 1
+	end },
+	{ id = "trail_cutter", name = "Trail Snapper", desc = "Cut 10 rival trails.", coins = 200, check = function(d)
+		return d.stats.kills >= 10
+	end },
+	{ id = "veteran", name = "Veteran", desc = "Play 50 rounds.", coins = 300, check = function(d)
+		return d.stats.rounds >= 50
+	end },
+	{ id = "land_baron", name = "Land Baron", desc = "Claim 10,000 tiles in total.", coins = 500, check = function(d)
+		return d.stats.tilesClaimed >= 10000
+	end },
+	{ id = "conqueror", name = "Conqueror", desc = "Own 40% of the map at once.", coins = 400, check = function(d)
+		return d.stats.bestPercent >= 40
+	end },
+}
+
+-- Returns achievements newly satisfied by data (does not mutate).
+function Progression.newAchievements(data): { any }
+	local out = {}
+	for _, a in Progression.Achievements do
+		if data.achievements[a.id] == nil and a.check(data) then
+			out[#out + 1] = a
+		end
+	end
+	return out
+end
+
+-- Daily quest pool. kind matches the progress events the server emits.
+Progression.QuestPool = {
+	{ id = "claim_400", kind = "tiles", goal = 400, coins = 60, xp = 80, text = "Claim 400 tiles" },
+	{ id = "claim_1200", kind = "tiles", goal = 1200, coins = 120, xp = 150, text = "Claim 1,200 tiles" },
+	{ id = "cut_2", kind = "kills", goal = 2, coins = 70, xp = 90, text = "Cut 2 rival trails" },
+	{ id = "cut_5", kind = "kills", goal = 5, coins = 140, xp = 160, text = "Cut 5 rival trails" },
+	{ id = "top3_1", kind = "top3", goal = 1, coins = 80, xp = 100, text = "Finish in the top 3" },
+	{ id = "top3_3", kind = "top3", goal = 3, coins = 150, xp = 180, text = "Finish in the top 3 three times" },
+	{ id = "rounds_3", kind = "rounds", goal = 3, coins = 60, xp = 80, text = "Play 3 rounds" },
+	{ id = "bigloop_50", kind = "bigloop", goal = 1, coins = 100, xp = 120, text = "Claim 50+ tiles in one loop" },
+	{ id = "powerups_4", kind = "powerups", goal = 4, coins = 60, xp = 80, text = "Grab 4 power-ups" },
+	{ id = "win_1", kind = "wins", goal = 1, coins = 160, xp = 200, text = "Win a round" },
+}
+
+local questById = {}
+for _, q in Progression.QuestPool do
+	questById[q.id] = q
+end
+
+function Progression.quest(id: string)
+	return questById[id]
+end
+
+-- Deterministic 3 quests of different kinds for a UTC day number.
+function Progression.questsForDay(day: number): { string }
+	local seed = (day * 1103515245 + 12345) % 2147483648
+	local picked, kinds = {}, {}
+	local pool = Progression.QuestPool
+	local guard = 0
+	while #picked < 3 and guard < 200 do
+		guard += 1
+		seed = (seed * 1103515245 + 12345) % 2147483648
+		local q = pool[seed % #pool + 1]
+		if not kinds[q.kind] then
+			kinds[q.kind] = true
+			picked[#picked + 1] = q.id
+		end
+	end
+	return picked
+end
+
+function Progression.dayNumber(unixTime: number): number
+	return unixTime // 86400
+end
+
+-- Daily reward: claimable once per UTC day. Missing days never resets progress (no streak pressure).
+function Progression.dailyStatus(daily, today: number): (boolean, number, number)
+	local canClaim = daily.lastDay < today
+	local step = daily.step % #E.DailyRewards + 1
+	return canClaim, step, E.DailyRewards[step]
+end
+
+return Progression
+]]></string>
+        </Properties>
+      </Item>
+      <Item class="ModuleScript" referent="11">
+        <Properties>
+          <string name="Name">Signal</string>
+          <string name="Source"><![CDATA[-- Minimal synchronous signal.
+local Signal = {}
+Signal.__index = Signal
+
+function Signal.new()
+	return setmetatable({ _handlers = {} }, Signal)
+end
+
+function Signal:Connect(fn)
+	local handlers = self._handlers
+	handlers[fn] = true
+	return {
+		Disconnect = function()
+			handlers[fn] = nil
+		end,
+	}
+end
+
+function Signal:Fire(...)
+	for fn in table.clone(self._handlers) do
+		local ok, err = pcall(fn, ...)
+		if not ok then
+			warn("[Signal] handler error: " .. tostring(err))
+		end
+	end
+end
+
+return Signal
+]]></string>
+        </Properties>
+      </Item>
+    </Item>
+  </Item>
+  <Item class="ServerScriptService" referent="12">
+    <Properties>
+      <string name="Name">ServerScriptService</string>
+    </Properties>
+    <Item class="Folder" referent="13">
+      <Properties>
+        <string name="Name">Server</string>
+      </Properties>
+      <Item class="Folder" referent="14">
+        <Properties>
+          <string name="Name">Core</string>
+        </Properties>
+        <Item class="ModuleScript" referent="15">
+          <Properties>
+            <string name="Name">DataSchema</string>
+            <string name="Source"><![CDATA[-- Versioned player data schema: defaults, migrations, reconciliation, sanitizing.
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Cosmetics = require(ReplicatedStorage.Shared.Cosmetics)
+local Config = require(ReplicatedStorage.Shared.Config)
+
+local DataSchema = {}
+
+DataSchema.Version = 1
+
+function DataSchema.defaults(now: number)
+	return {
+		version = DataSchema.Version,
+		coins = 0,
+		xp = 0,
+		level = 1,
+		stats = {
+			rounds = 0,
+			wins = 0,
+			kills = 0,
+			deaths = 0,
+			captures = 0,
+			tilesClaimed = 0,
+			bestPercent = 0,
+			bestLoop = 0,
+			powerups = 0,
+			robuxSpent = 0,
+		},
+		owned = {},
+		equipped = table.clone(Cosmetics.Defaults),
+		achievements = {},
+		quests = { day = -1, list = {} },
+		daily = { lastDay = -1, step = 0 },
+		settings = { sfx = 0.8, music = 0.5, camera = "top", reducedFx = false },
+		tutorialDone = false,
+		tutorialStep = 0,
+		receipts = {},
+		firstJoin = now,
+		lastJoin = now,
+		sessions = 0,
+	}
+end
+
+-- Migrations[n] upgrades a record from version n to n + 1. Add entries, never edit shipped ones.
+DataSchema.Migrations = {} :: { [number]: (any) -> any }
+
+local function reconcile(target, template)
+	for k, v in template do
+		local cur = target[k]
+		if cur == nil or typeof(cur) ~= typeof(v) then
+			target[k] = if type(v) == "table" then table.clone(v) else v
+		elseif type(v) == "table" and next(v) ~= nil and #v == 0 then
+			reconcile(cur, v)
+		end
+	end
+end
+
+local function sane(n: number, lo: number, hi: number): number
+	if n ~= n then -- NaN
+		return lo
+	end
+	return math.clamp(math.floor(n), lo, hi)
+end
+
+-- Turns whatever is stored into a valid current-version record.
+-- Returns nil, reason when the record must not be touched (written by a newer game version).
+function DataSchema.load(raw: any, now: number): (any, string?)
+	if type(raw) ~= "table" then
+		return DataSchema.defaults(now), nil
+	end
+	local data = raw
+	if type(data.version) ~= "number" then
+		data.version = 0
+	end
+	if data.version > DataSchema.Version then
+		return nil, "newer"
+	end
+	while data.version < DataSchema.Version do
+		local m = DataSchema.Migrations[data.version]
+		if m then
+			data = m(data)
+		end
+		data.version += 1
+	end
+	reconcile(data, DataSchema.defaults(now))
+	data.coins = sane(data.coins, 0, Config.Economy.MaxCoins)
+	data.level = sane(data.level, 1, Config.Progression.MaxLevel)
+	data.xp = sane(data.xp, 0, 1e9)
+	for slot, default in Cosmetics.Defaults do
+		if type(data.equipped[slot]) ~= "string" or Cosmetics.get(data.equipped[slot]) == nil then
+			data.equipped[slot] = default
+		end
+	end
+	return data, nil
+end
+
+-- What the client is allowed to see (everything except receipt history).
+function DataSchema.publicView(data)
+	local view = table.clone(data)
+	view.receipts = nil
+	return view
+end
+
+return DataSchema
+]]></string>
+          </Properties>
+        </Item>
+        <Item class="ModuleScript" referent="16">
+          <Properties>
+            <string name="Name">MemoryStore</string>
+            <string name="Source"><![CDATA[-- In-memory stand-in for a DataStore (Studio without API access, and tests).
+-- Values are deep-copied to mimic serialization. failNext forces errors for failure tests.
+local MemoryStore = {}
+MemoryStore.__index = MemoryStore
+
+local function copy(v)
+	if type(v) ~= "table" then
+		return v
+	end
+	local out = {}
+	for k, x in v do
+		out[k] = copy(x)
+	end
+	return out
+end
+
+function MemoryStore.new()
+	return setmetatable({ values = {}, failNext = 0, writes = 0 }, MemoryStore)
+end
+
+function MemoryStore:UpdateAsync(key: string, transform)
+	if self.failNext > 0 then
+		self.failNext -= 1
+		error("simulated DataStore failure")
+	end
+	local result = transform(copy(self.values[key]))
+	if result ~= nil then
+		self.values[key] = copy(result)
+		self.writes += 1
+	end
+	return copy(self.values[key])
+end
+
+return MemoryStore
+]]></string>
+          </Properties>
+        </Item>
+        <Item class="ModuleScript" referent="17">
+          <Properties>
+            <string name="Name">ProfileStore</string>
+            <string name="Source"><![CDATA[-- Session-locked profile persistence on top of any store exposing UpdateAsync(key, transform).
+-- One server owns a profile at a time; a server that loses the lock stops writing (no dupes).
+
+local DataSchema = require(script.Parent.DataSchema)
+
+local ProfileStore = {}
+ProfileStore.__index = ProfileStore
+
+local Profile = {}
+Profile.__index = Profile
+
+-- opts: store, jobId, now(), sleep(s), lockStale, attempts, retryDelay
+function ProfileStore.new(opts)
+	return setmetatable(opts, ProfileStore)
+end
+
+function ProfileStore:load(key: string)
+	local lastErr = "unknown"
+	for attempt = 1, self.attempts do
+		local state, loaded = nil, nil
+		local ok, err = pcall(function()
+			self.store:UpdateAsync(key, function(record)
+				record = if type(record) == "table" then record else {}
+				local now = self.now()
+				local lock = record.lock
+				if lock and lock.jobId ~= self.jobId and now - (lock.time or 0) < self.lockStale then
+					state = "locked"
+					return nil
+				end
+				local data, reason = DataSchema.load(record.data, now)
+				if not data then
+					state = reason
+					return nil
+				end
+				record.data = data
+				record.lock = { jobId = self.jobId, time = now }
+				state, loaded = "ok", record
+				return record
+			end)
+		end)
+		if ok and state == "ok" then
+			return setmetatable({ key = key, data = loaded.data, owner = self, lost = false, released = false }, Profile),
+				nil
+		elseif state == "newer" then
+			return nil, "newer"
+		end
+		lastErr = if ok then tostring(state) else tostring(err)
+		if attempt < self.attempts then
+			self.sleep(self.retryDelay * attempt)
+		end
+	end
+	return nil, lastErr
+end
+
+-- Writes data. release = true drops the session lock (player leaving / server closing).
+function Profile:save(release: boolean?): boolean
+	if self.lost or self.released then
+		return false
+	end
+	local owner = self.owner
+	local lostNow = false
+	local ok, err = pcall(function()
+		owner.store:UpdateAsync(self.key, function(record)
+			record = if type(record) == "table" then record else {}
+			local lock = record.lock
+			if not lock or lock.jobId ~= owner.jobId then
+				lostNow = true
+				return nil
+			end
+			record.data = self.data
+			record.lock = if release then nil else { jobId = owner.jobId, time = owner.now() }
+			return record
+		end)
+	end)
+	if lostNow then
+		self.lost = true
+		return false
+	end
+	if ok and release then
+		self.released = true
+	end
+	if not ok then
+		warn("[ProfileStore] save failed for " .. self.key .. ": " .. tostring(err))
+	end
+	return ok
+end
+
+return ProfileStore
+]]></string>
+          </Properties>
+        </Item>
+        <Item class="ModuleScript" referent="18">
+          <Properties>
+            <string name="Name">RateLimiter</string>
+            <string name="Source"><![CDATA[-- Token-bucket rate limiter keyed by any value (usually a Player).
+local RateLimiter = {}
+RateLimiter.__index = RateLimiter
+
+function RateLimiter.new(capacity: number, refillPerSecond: number, clock: (() -> number)?)
+	return setmetatable({
+		capacity = capacity,
+		refill = refillPerSecond,
+		clock = clock or os.clock,
+		buckets = {},
+	}, RateLimiter)
+end
+
+function RateLimiter:allow(key: any): boolean
+	local now = self.clock()
+	local b = self.buckets[key]
+	if not b then
+		b = { tokens = self.capacity, at = now }
+		self.buckets[key] = b
+	end
+	b.tokens = math.min(self.capacity, b.tokens + (now - b.at) * self.refill)
+	b.at = now
+	if b.tokens >= 1 then
+		b.tokens -= 1
+		return true
+	end
+	return false
+end
+
+function RateLimiter:forget(key: any)
+	self.buckets[key] = nil
+end
+
+return RateLimiter
+]]></string>
+          </Properties>
+        </Item>
+        <Item class="ModuleScript" referent="19">
+          <Properties>
+            <string name="Name">ReceiptLogic</string>
+            <string name="Source"><![CDATA[-- Idempotent developer-product receipt handling, independent of Roblox APIs (testable).
+-- deps: getProfile(userId), grant(profile, productId) -> boolean, save(profile) -> boolean, now(), maxHistory
+
+local ReceiptLogic = {}
+
+local function trim(receipts, max: number)
+	local entries = {}
+	for id, t in receipts do
+		entries[#entries + 1] = { id, t }
+	end
+	if #entries <= max then
+		return
+	end
+	table.sort(entries, function(a, b)
+		return a[2] < b[2]
+	end)
+	for k = 1, #entries - max do
+		receipts[entries[k][1]] = nil
+	end
+end
+
+-- Returns "Granted" only after the grant is persisted; otherwise "NotProcessedYet" so Roblox retries.
+function ReceiptLogic.process(info, deps): string
+	local profile = deps.getProfile(info.PlayerId)
+	if not profile then
+		return "NotProcessedYet"
+	end
+	local receipts = profile.data.receipts
+	local id = tostring(info.PurchaseId)
+	if receipts[id] == nil then
+		if not deps.grant(profile, info.ProductId) then
+			return "NotProcessedYet"
+		end
+		receipts[id] = deps.now()
+		trim(receipts, deps.maxHistory)
+	end
+	return if deps.save(profile) then "Granted" else "NotProcessedYet"
+end
+
+return ReceiptLogic
+]]></string>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Script" referent="20">
+        <Properties>
+          <string name="Name">Main</string>
+          <token name="RunContext">0</token>
+          <string name="Source"><![CDATA[-- Server bootstrap: require every service, Init (wire dependencies), then Start.
+local Services = script.Parent.Services
+
+local ORDER = {
+	"TelemetryService",
+	"DataService",
+	"MonetizationService",
+	"EconomyService",
+	"QuestService",
+	"WorldBuilder",
+	"AvatarService",
+	"PowerupService",
+	"BotService",
+	"MatchService",
+	"LeaderboardService",
+	"RequestRouter",
+}
+
+local registry = {}
+for _, name in ORDER do
+	registry[name] = require(Services[name])
+end
+for _, name in ORDER do
+	local s = registry[name]
+	if s.Init then
+		s:Init(registry)
+	end
+end
+for _, name in ORDER do
+	local s = registry[name]
+	if s.Start then
+		task.spawn(s.Start, s)
+	end
+end
+
+print(string.format("[ChromaTurf] server started (%d services)", #ORDER))
+]]></string>
+        </Properties>
+      </Item>
+      <Item class="Folder" referent="21">
+        <Properties>
+          <string name="Name">Services</string>
+        </Properties>
+        <Item class="ModuleScript" referent="22">
+          <Properties>
+            <string name="Name">AvatarService</string>
+            <string name="Source"><![CDATA[-- Character setup: no player-vs-player collisions (no body blocking), nametags with titles, cosmetic FX.
+local CollectionService = game:GetService("CollectionService")
+local PhysicsService = game:GetService("PhysicsService")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Config = require(ReplicatedStorage.Shared.Config)
+local Cosmetics = require(ReplicatedStorage.Shared.Cosmetics)
+
+local AvatarService = {}
+
+local GROUP = "Players"
+
+local function rgb(t)
+	return Color3.fromRGB(t[1], t[2], t[3])
+end
+
+local function rainbow(): ColorSequence
+	local keys = {}
+	for k = 0, 6 do
+		keys[#keys + 1] = ColorSequenceKeypoint.new(k / 6, Color3.fromHSV(k / 6, 0.8, 1))
+	end
+	return ColorSequence.new(keys)
+end
+
+function AvatarService:Init(S)
+	self.S = S
+	if not PhysicsService:IsCollisionGroupRegistered(GROUP) then
+		PhysicsService:RegisterCollisionGroup(GROUP)
+	end
+	PhysicsService:CollisionGroupSetCollidable(GROUP, GROUP, false)
+end
+
+function AvatarService:InkColor(player: Player): Color3
+	local assigned = self.S.MatchService:AssignedColor(player)
+	if assigned then
+		return assigned
+	end
+	local data = self.S.DataService:Get(player)
+	local ink = Cosmetics.get(data and data.equipped.ink or Cosmetics.Defaults.ink)
+	return rgb(ink.color)
+end
+
+local function tag(inst)
+	inst.Name = "CosmeticFX"
+	CollectionService:AddTag(inst, "CosmeticFX")
+	return inst
+end
+
+function AvatarService:_applyFx(root: BasePart, fx, color: Color3)
+	if fx.kind == "trail" then
+		local a0 = tag(Instance.new("Attachment"))
+		a0.Position = Vector3.new(0, 0.9, 0)
+		a0.Parent = root
+		local a1 = tag(Instance.new("Attachment"))
+		a1.Position = Vector3.new(0, -0.9, 0)
+		a1.Parent = root
+		local trail = tag(Instance.new("Trail"))
+		trail.Attachment0, trail.Attachment1 = a0, a1
+		trail.Color = if fx.rainbow then rainbow() else ColorSequence.new(color)
+		trail.Lifetime = if fx.long then 1.4 else 0.6
+		trail.LightEmission = 0.7
+		trail.FaceCamera = true
+		trail.Transparency = NumberSequence.new(0.15, 1)
+		trail.Parent = root
+	elseif fx.kind == "sparkles" then
+		local s = tag(Instance.new("Sparkles"))
+		s.SparkleColor = color
+		s.Parent = root
+	elseif fx.kind == "fire" then
+		local f = tag(Instance.new("Fire"))
+		f.Color = color
+		f.SecondaryColor = Color3.new(1, 1, 1)
+		f.Size = 4
+		f.Heat = 6
+		f.Parent = root
+	elseif fx.kind == "smoke" then
+		local s = tag(Instance.new("Smoke"))
+		s.Color = color
+		s.Opacity = 0.15
+		s.RiseVelocity = 2
+		s.Size = 2
+		s.Parent = root
+	elseif fx.kind == "particles" then
+		local p = tag(Instance.new("ParticleEmitter"))
+		p.Color = ColorSequence.new(color, Color3.new(1, 1, 1))
+		p.LightEmission = 1
+		p.Rate = 14
+		p.Lifetime = NumberRange.new(0.6, 1.2)
+		p.Speed = NumberRange.new(1, 3)
+		p.Size = NumberSequence.new(0.5, 0)
+		p.Parent = root
+	end
+end
+
+function AvatarService:Refresh(player: Player)
+	local char = player.Character
+	local data = self.S.DataService:Get(player)
+	local head = char and char:FindFirstChild("Head")
+	local root = char and char:FindFirstChild("HumanoidRootPart")
+	if not (data and head and root) then
+		return
+	end
+	for _, inst in root:GetChildren() do
+		if inst.Name == "CosmeticFX" then
+			inst:Destroy()
+		end
+	end
+	local color = self:InkColor(player)
+	local passes = self.S.MonetizationService:GetPasses(player)
+	local fx = Cosmetics.get(data.equipped.trail)
+	if fx and Cosmetics.isUnlocked(data, passes, fx) then
+		self:_applyFx(root, fx, color)
+	end
+
+	local tagGui = head:FindFirstChild("Nametag") or Instance.new("BillboardGui")
+	tagGui.Name = "Nametag"
+	tagGui.Size = UDim2.fromOffset(220, 56)
+	tagGui.StudsOffset = Vector3.new(0, 2.8, 0)
+	tagGui.MaxDistance = 140
+	tagGui:ClearAllChildren()
+	local nameLabel = Instance.new("TextLabel")
+	nameLabel.Size = UDim2.fromScale(1, 0.58)
+	nameLabel.BackgroundTransparency = 1
+	nameLabel.Font = Enum.Font.FredokaOne
+	nameLabel.TextScaled = true
+	nameLabel.Text = (if passes.VIP then "[VIP] " else "") .. player.DisplayName
+	nameLabel.TextColor3 = if passes.VIP then Color3.fromRGB(255, 210, 70) else color
+	nameLabel.TextStrokeTransparency = 0.2
+	nameLabel.Parent = tagGui
+	local title = Cosmetics.get(data.equipped.title)
+	local sub = Instance.new("TextLabel")
+	sub.Size = UDim2.fromScale(1, 0.4)
+	sub.Position = UDim2.fromScale(0, 0.6)
+	sub.BackgroundTransparency = 1
+	sub.Font = Enum.Font.GothamBold
+	sub.TextScaled = true
+	sub.TextColor3 = Color3.fromRGB(230, 230, 255)
+	sub.TextStrokeTransparency = 0.4
+	local titleText = if title and title.name ~= "" and Cosmetics.isUnlocked(data, passes, title) then title.name .. "  -  " else ""
+	sub.Text = titleText .. "Lv " .. data.level
+	sub.Parent = tagGui
+	tagGui.Parent = head
+end
+
+function AvatarService:_setup(player: Player, char: Model)
+	local function group(inst)
+		if inst:IsA("BasePart") then
+			inst.CollisionGroup = GROUP
+		end
+	end
+	for _, d in char:GetDescendants() do
+		group(d)
+	end
+	char.DescendantAdded:Connect(group)
+	local humanoid = char:WaitForChild("Humanoid", 10)
+	if humanoid then
+		humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+		humanoid.WalkSpeed = Config.Movement.WalkSpeed
+	end
+	char:WaitForChild("Head", 10)
+	char:WaitForChild("HumanoidRootPart", 10)
+	self:Refresh(player)
+end
+
+function AvatarService:Start()
+	local function onPlayer(player)
+		player.CharacterAdded:Connect(function(char)
+			self:_setup(player, char)
+		end)
+		if player.Character then
+			task.spawn(self._setup, self, player, player.Character)
+		end
+	end
+	Players.PlayerAdded:Connect(onPlayer)
+	for _, p in Players:GetPlayers() do
+		onPlayer(p)
+	end
+	self.S.DataService.Loaded:Connect(function(player)
+		self:Refresh(player)
+	end)
+end
+
+return AvatarService
+]]></string>
+          </Properties>
+        </Item>
+        <Item class="ModuleScript" referent="23">
+          <Properties>
+            <string name="Name">BotService</string>
+            <string name="Source"><![CDATA[-- Server bots so every round is lively even at low traffic. Clearly labelled "Bot" in UI.
+-- Bots obey exactly the same Grid rules as players (MatchService samples their position).
+-- Positions are simulated on the server and rendered by clients (no physics cost).
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Config = require(ReplicatedStorage.Shared.Config)
+local Net = require(ReplicatedStorage.Shared.Net)
+
+local G = Config.Grid
+
+local BotService = { rng = Random.new(), nameIndex = 0 }
+
+local NAMES = { "Pip", "Zippy", "Mochi", "Blip", "Nova", "Taffy", "Echo", "Bean", "Juno", "Pixel", "Sprout", "Wobble", "Kiwi", "Dot", "Fizz", "Rumble" }
+local DIRS = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } }
+
+function BotService:NextName(): string
+	self.nameIndex = self.nameIndex % #NAMES + 1
+	return "Bot " .. NAMES[self.nameIndex]
+end
+
+function BotService:Attach(p)
+	p.bot = { pos = Vector3.new(0, G.FloorY, 0), path = {}, pathIndex = 1, skill = self.rng:NextNumber(0.3, 0.85) }
+	p.respawnAt = 0
+end
+
+function BotService:Respawn(p, pos: Vector3)
+	local b = p.bot
+	b.pos = Vector3.new(pos.X, G.FloorY, pos.Z)
+	b.path, b.pathIndex = {}, 1
+end
+
+function BotService:Destroy(_p) end
+
+local function clamp(v: number): number
+	return math.clamp(v, 1, G.Size)
+end
+
+-- Builds a path through waypoints; nil if it touches a blocked cell or our own trail.
+local function route(grid, trailSet, waypoints): { number }?
+	local cells = {}
+	for k = 2, #waypoints do
+		local a, b = waypoints[k - 1], waypoints[k]
+		for _, i in grid:walk(a[1], a[2], b[1], b[2]) do
+			if grid.owner[i] == -1 or trailSet[i] then
+				return nil
+			end
+			cells[#cells + 1] = i
+		end
+	end
+	return cells
+end
+
+local function trailSetOf(p)
+	local set = {}
+	local n = #p.trail
+	for k = 1, n - Config.Match.TrailGrace do
+		set[p.trail[k]] = true
+	end
+	return set
+end
+
+function BotService:_pathTo(p, grid, cx: number, cz: number, tx: number, tz: number): { number }?
+	local set = trailSetOf(p)
+	return route(grid, set, { { cx, cz }, { tx, cz }, { tx, tz } })
+		or route(grid, set, { { cx, cz }, { cx, tz }, { tx, tz } })
+end
+
+function BotService:_nearest(grid, cx: number, cz: number, radius: number, pred: (number) -> boolean): (number?, number?)
+	local best, bx, bz = math.huge, nil, nil
+	for z = math.max(1, cz - radius), math.min(G.Size, cz + radius) do
+		for x = math.max(1, cx - radius), math.min(G.Size, cx + radius) do
+			local d = math.abs(x - cx) + math.abs(z - cz)
+			if d < best and pred(grid:index(x, z)) then
+				best, bx, bz = d, x, z
+			end
+		end
+	end
+	return bx, bz
+end
+
+function BotService:_plan(p, match, cx: number, cz: number)
+	local grid, b, rng = match.grid, p.bot, self.rng
+	local here = grid:index(cx, cz)
+	b.path, b.pathIndex = {}, 1
+
+	if grid.owner[here] ~= p.slot or #p.trail > 0 then
+		local hx, hz = self:_nearest(grid, cx, cz, G.Size, function(i)
+			return grid.owner[i] == p.slot
+		end)
+		if hx then
+			b.path = self:_pathTo(p, grid, cx, cz, hx, hz) or grid:walk(cx, cz, hx, hz)
+		end
+		return
+	end
+
+	-- Hunt: chase a nearby rival trail.
+	if rng:NextNumber() < b.skill * 0.5 then
+		local tx, tz = self:_nearest(grid, cx, cz, 7, function(i)
+			local t = grid.trail[i]
+			return t ~= 0 and t ~= p.slot
+		end)
+		if tx then
+			local path = self:_pathTo(p, grid, cx, cz, tx, tz)
+			if path then
+				b.path = path
+				return
+			end
+		end
+	end
+
+	-- Expand: rectangular excursion that returns home.
+	for _ = 1, 6 do
+		local d = DIRS[rng:NextInteger(1, 4)]
+		local side = if rng:NextInteger(0, 1) == 0 then 1 else -1
+		local px, pz = d[2] * side, d[1] * side
+		local a = rng:NextInteger(3, 5 + math.floor(b.skill * 8))
+		local w = rng:NextInteger(3, 4 + math.floor(b.skill * 6))
+		local x1, z1 = clamp(cx + d[1] * a), clamp(cz + d[2] * a)
+		local x2, z2 = clamp(x1 + px * w), clamp(z1 + pz * w)
+		local x3, z3 = clamp(x2 - d[1] * a), clamp(z2 - d[2] * a)
+		local path = route(grid, {}, { { cx, cz }, { x1, z1 }, { x2, z2 }, { x3, z3 }, { cx, cz } })
+		if path and #path > 0 then
+			b.path = path
+			return
+		end
+	end
+	-- Nothing valid: shuffle to a random neighbouring own cell.
+	local d = DIRS[rng:NextInteger(1, 4)]
+	b.path = { grid:index(clamp(cx + d[1]), clamp(cz + d[2])) }
+end
+
+function BotService:_danger(p, match): boolean
+	if #p.trail < 3 then
+		return false
+	end
+	local reach = G.TileSize * (3 + p.bot.skill * 3)
+	for _, o in match.participants do
+		if o ~= p and o.alive and o.kind == "player" then
+			local pos = match:PositionOf(o)
+			if pos and (Vector3.new(pos.X, G.FloorY, pos.Z) - p.bot.pos).Magnitude < reach then
+				return true
+			end
+		end
+	end
+	return false
+end
+
+function BotService:_stepBot(p, dt: number, match)
+	local b = p.bot
+	local grid = match.grid
+	local cx, cz = match:CellAt(b.pos)
+	cx, cz = clamp(cx), clamp(cz)
+	if b.pathIndex > #b.path then
+		self:_plan(p, match, cx, cz)
+	elseif not b.fleeing and self:_danger(p, match) and self.rng:NextNumber() < b.skill then
+		b.fleeing = true
+		b.path = {}
+		self:_plan(p, match, cx, cz)
+	end
+	if #p.trail == 0 then
+		b.fleeing = false
+	end
+	local remaining = match:SpeedOf(p) * dt
+	while remaining > 0 and b.pathIndex <= #b.path do
+		local tx, tz = grid:coords(b.path[b.pathIndex])
+		local target = match:CellCenter(tx, tz)
+		local delta = Vector3.new(target.X - b.pos.X, 0, target.Z - b.pos.Z)
+		local d = delta.Magnitude
+		if d <= remaining then
+			b.pos = Vector3.new(target.X, G.FloorY, target.Z)
+			remaining -= d
+			b.pathIndex += 1
+		else
+			b.pos += delta.Unit * remaining
+			remaining = 0
+		end
+	end
+end
+
+function BotService:Step(dt: number, match)
+	for _, p in match.participants do
+		if p.kind == "bot" and p.alive then
+			self:_stepBot(p, dt, match)
+		end
+	end
+end
+
+-- u8 count, then per bot: u8 slot, u8 alive, f32 x, f32 z
+function BotService:Broadcast(match)
+	local bots = {}
+	for _, p in match.participants do
+		if p.kind == "bot" then
+			bots[#bots + 1] = p
+		end
+	end
+	if #bots == 0 then
+		return
+	end
+	local buf = buffer.create(1 + #bots * 10)
+	buffer.writeu8(buf, 0, #bots)
+	for k, p in bots do
+		local o = 1 + (k - 1) * 10
+		buffer.writeu8(buf, o, p.slot)
+		buffer.writeu8(buf, o + 1, if p.alive then 1 else 0)
+		buffer.writef32(buf, o + 2, p.bot.pos.X)
+		buffer.writef32(buf, o + 6, p.bot.pos.Z)
+	end
+	Net.BotPos:FireAllClients(buf)
+end
+
+return BotService
+]]></string>
+          </Properties>
+        </Item>
+        <Item class="ModuleScript" referent="24">
+          <Properties>
+            <string name="Name">DataService</string>
+            <string name="Source"><![CDATA[-- Owns player profiles: session-locked load, autosave, save on leave and on shutdown.
+local DataStoreService = game:GetService("DataStoreService")
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+local Config = require(ReplicatedStorage.Shared.Config)
+local Signal = require(ReplicatedStorage.Shared.Signal)
+local Net = require(ReplicatedStorage.Shared.Net)
+local ProfileStore = require(script.Parent.Parent.Core.ProfileStore)
+local DataSchema = require(script.Parent.Parent.Core.DataSchema)
+local MemoryStore = require(script.Parent.Parent.Core.MemoryStore)
+
+local DataService = {
+	profiles = {} :: { [Player]: any },
+	dirty = {} :: { [Player]: boolean },
+	Loaded = Signal.new(), -- (player, data)
+	Releasing = Signal.new(), -- (player, data) fired before the final save
+	usingMemory = false,
+}
+
+local function storeFor(store)
+	local jobId = if game.JobId ~= "" then game.JobId else "studio-" .. HttpService:GenerateGUID(false)
+	return ProfileStore.new({
+		store = store,
+		jobId = jobId,
+		now = os.time,
+		sleep = task.wait,
+		lockStale = Config.Data.LockStaleSeconds,
+		attempts = Config.Data.LoadAttempts,
+		retryDelay = Config.Data.LoadRetryDelay,
+	})
+end
+
+function DataService:Init(S)
+	self.S = S
+	self.store = storeFor(DataStoreService:GetDataStore(Config.Data.StoreName))
+	self.memory = storeFor(MemoryStore.new())
+	if RunService:IsStudio() then
+		self.store.attempts = 2 -- fail fast to the memory fallback when API access is off
+		self.store.retryDelay = 1
+	end
+end
+
+function DataService:Get(player: Player)
+	local p = self.profiles[player]
+	return p and p.data
+end
+
+function DataService:GetProfile(player: Player)
+	return self.profiles[player]
+end
+
+function DataService:MarkDirty(player: Player)
+	self.dirty[player] = true
+end
+
+function DataService:Push(player: Player)
+	local data = self:Get(player)
+	if data then
+		local passes = self.S.MonetizationService:GetPasses(player)
+		Net.Profile:FireClient(player, DataSchema.publicView(data), passes)
+	end
+end
+
+function DataService:_onPlayerAdded(player: Player)
+	local key = "u_" .. player.UserId
+	local profile, err = self.store:load(key)
+	if not profile and RunService:IsStudio() then
+		warn("[DataService] DataStore unavailable in Studio (" .. tostring(err) .. "); using a temporary profile")
+		self.usingMemory = true
+		profile, err = self.memory:load(key)
+	end
+	if not player.Parent then
+		if profile then
+			profile:save(true)
+		end
+		return
+	end
+	if not profile then
+		player:Kick(
+			if err == "newer"
+				then "A newer version of Chroma Turf is live. Please rejoin."
+				else "We couldn't load your save safely. Please rejoin in a moment."
+		)
+		return
+	end
+	local data = profile.data
+	data.sessions += 1
+	data.lastJoin = os.time()
+	self.profiles[player] = profile
+	-- Return-day signal for D1/D7/D30 cohorts (days since first join; 0 = first day).
+	local days = (os.time() - data.firstJoin) // 86400
+	self.S.TelemetryService:Custom(player, "SessionStart", days, { if data.sessions == 1 then "new" else "returning" })
+	self.S.MonetizationService:LoadPasses(player)
+	self.Loaded:Fire(player, data)
+	self:Push(player)
+end
+
+function DataService:_release(player: Player)
+	local profile = self.profiles[player]
+	if not profile then
+		return
+	end
+	self.Releasing:Fire(player, profile.data)
+	self.profiles[player] = nil
+	self.dirty[player] = nil
+	profile:save(true)
+end
+
+function DataService:SaveNow(player: Player): boolean
+	local profile = self.profiles[player]
+	return profile ~= nil and profile:save(false)
+end
+
+function DataService:Start()
+	Players.PlayerAdded:Connect(function(player)
+		self:_onPlayerAdded(player)
+	end)
+	for _, player in Players:GetPlayers() do
+		task.spawn(self._onPlayerAdded, self, player)
+	end
+	Players.PlayerRemoving:Connect(function(player)
+		self:_release(player)
+	end)
+
+	game:BindToClose(function()
+		local pending = 0
+		for player in self.profiles do
+			pending += 1
+			task.spawn(function()
+				self:_release(player)
+				pending -= 1
+			end)
+		end
+		local deadline = os.clock() + 25
+		while pending > 0 and os.clock() < deadline do
+			task.wait(0.1)
+		end
+	end)
+
+	-- Batched client replication (at most 4 pushes per second per player).
+	task.spawn(function()
+		while true do
+			task.wait(0.25)
+			for player in self.dirty do
+				self.dirty[player] = nil
+				self:Push(player)
+			end
+		end
+	end)
+
+	-- Autosave, staggered across players.
+	task.spawn(function()
+		while true do
+			task.wait(Config.Data.AutosaveSeconds)
+			for player, profile in table.clone(self.profiles) do
+				if player.Parent then
+					profile:save(false)
+					if profile.lost then
+						self.profiles[player] = nil
+						player:Kick("Your save was opened on another server. Please rejoin.")
+					end
+					task.wait(0.5)
+				end
+			end
+		end
+	end)
+end
+
+return DataService
+]]></string>
+          </Properties>
+        </Item>
+        <Item class="ModuleScript" referent="25">
+          <Properties>
+            <string name="Name">EconomyService</string>
+            <string name="Source"><![CDATA[-- Coins, XP/levels, cosmetics (buy/equip), achievements, daily reward. All server-side.
+local BadgeService = game:GetService("BadgeService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Config = require(ReplicatedStorage.Shared.Config)
+local Cosmetics = require(ReplicatedStorage.Shared.Cosmetics)
+local Progression = require(ReplicatedStorage.Shared.Progression)
+local Net = require(ReplicatedStorage.Shared.Net)
+
+local EconomyService = {}
+
+function EconomyService:Init(S)
+	self.S = S
+end
+
+function EconomyService:Notify(player: Player, text: string, style: string?)
+	Net.Notify:FireClient(player, text, style or "info")
+end
+
+function EconomyService:AddCoins(player: Player, amount: number, txType: string, sku: string?)
+	local data = self.S.DataService:Get(player)
+	if not data or amount <= 0 then
+		return
+	end
+	amount = math.floor(amount)
+	data.coins = math.min(Config.Economy.MaxCoins, data.coins + amount)
+	self.S.TelemetryService:Economy(player, "Source", amount, data.coins, txType, sku)
+	self.S.DataService:MarkDirty(player)
+end
+
+function EconomyService:SpendCoins(player: Player, amount: number, sku: string): boolean
+	local data = self.S.DataService:Get(player)
+	if not data or amount <= 0 or data.coins < amount then
+		return false
+	end
+	data.coins -= amount
+	self.S.TelemetryService:Economy(player, "Sink", amount, data.coins, "Shop", sku)
+	self.S.DataService:MarkDirty(player)
+	return true
+end
+
+-- Returns levels gained.
+function EconomyService:AddXp(player: Player, amount: number): number
+	local data = self.S.DataService:Get(player)
+	if not data then
+		return 0
+	end
+	local before = data.level
+	local gained
+	data.level, data.xp, gained = Progression.addXp(data.level, data.xp, amount)
+	if gained > 0 then
+		self:AddCoins(player, Config.Progression.LevelUpCoins * gained, "Gameplay", "LevelUp")
+		self:Notify(player, "Level " .. data.level .. "!", "level")
+		for _, list in Cosmetics.Categories do
+			for _, item in list do
+				local u = item.unlock
+				if u.type == "level" and u.level > before and u.level <= data.level then
+					self:Notify(player, "Unlocked: " .. item.name, "unlock")
+				end
+			end
+		end
+		self.S.AvatarService:Refresh(player)
+	end
+	self.S.DataService:MarkDirty(player)
+	return gained
+end
+
+function EconomyService:CheckAchievements(player: Player)
+	local data = self.S.DataService:Get(player)
+	if not data then
+		return
+	end
+	for _, a in Progression.newAchievements(data) do
+		data.achievements[a.id] = os.time()
+		self:AddCoins(player, a.coins, "Gameplay", "Achievement_" .. a.id)
+		self:Notify(player, "Achievement: " .. a.name .. "  +" .. a.coins .. " coins", "achievement")
+		self.S.TelemetryService:Custom(player, "Achievement", 1, { a.id })
+		local badgeId = Config.Badges[a.id]
+		if badgeId and badgeId ~= 0 then
+			task.spawn(pcall, BadgeService.AwardBadge, BadgeService, player.UserId, badgeId)
+		end
+	end
+end
+
+function EconomyService:BuyCosmetic(player: Player, id: string)
+	local data = self.S.DataService:Get(player)
+	local item = Cosmetics.get(id)
+	if not data or not item or item.unlock.type ~= "coins" then
+		return { ok = false, err = "invalid" }
+	end
+	if data.owned[id] then
+		return { ok = false, err = "owned" }
+	end
+	if not self:SpendCoins(player, item.unlock.price, id) then
+		return { ok = false, err = "coins" }
+	end
+	data.owned[id] = true
+	self:Equip(player, id)
+	return { ok = true }
+end
+
+function EconomyService:Equip(player: Player, id: string)
+	local data = self.S.DataService:Get(player)
+	local item = Cosmetics.get(id)
+	if not data or not item then
+		return { ok = false, err = "invalid" }
+	end
+	if not Cosmetics.isUnlocked(data, self.S.MonetizationService:GetPasses(player), item) then
+		return { ok = false, err = "locked" }
+	end
+	data.equipped[item.category] = id
+	self.S.DataService:MarkDirty(player)
+	self.S.AvatarService:Refresh(player)
+	return { ok = true }
+end
+
+function EconomyService:ClaimDaily(player: Player)
+	local data = self.S.DataService:Get(player)
+	if not data then
+		return { ok = false, err = "loading" }
+	end
+	local today = Progression.dayNumber(os.time())
+	local canClaim, step, coins = Progression.dailyStatus(data.daily, today)
+	if not canClaim then
+		return { ok = false, err = "claimed" }
+	end
+	data.daily.lastDay = today
+	data.daily.step = step
+	self:AddCoins(player, coins, "TimedReward", "Daily" .. step)
+	self.S.TelemetryService:Custom(player, "DailyClaim", step)
+	return { ok = true, coins = coins }
+end
+
+return EconomyService
+]]></string>
+          </Properties>
+        </Item>
+        <Item class="ModuleScript" referent="26">
+          <Properties>
+            <string name="Name">LeaderboardService</string>
+            <string name="Source"><![CDATA[-- Global "most wins" board (OrderedDataStore) displayed in the hub.
+local DataStoreService = game:GetService("DataStoreService")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Config = require(ReplicatedStorage.Shared.Config)
+
+local LeaderboardService = { pending = {}, names = {} }
+
+function LeaderboardService:Init(S)
+	self.S = S
+	local ok, store = pcall(DataStoreService.GetOrderedDataStore, DataStoreService, Config.Data.LeaderboardStore)
+	self.store = ok and store or nil
+end
+
+function LeaderboardService:MarkWins(player: Player, wins: number)
+	if wins > 0 then
+		self.pending[player.UserId] = wins
+	end
+end
+
+function LeaderboardService:_flush()
+	if not self.store then
+		return
+	end
+	for userId, wins in table.clone(self.pending) do
+		self.pending[userId] = nil
+		pcall(self.store.SetAsync, self.store, tostring(userId), wins)
+		task.wait(1)
+	end
+end
+
+function LeaderboardService:_nameOf(userId: number): string
+	if self.names[userId] then
+		return self.names[userId]
+	end
+	local ok, name = pcall(Players.GetNameFromUserIdAsync, Players, userId)
+	self.names[userId] = if ok then name else "Player"
+	return self.names[userId]
+end
+
+function LeaderboardService:_render(rows)
+	local hub = workspace:FindFirstChild("Hub")
+	local board = hub and hub:FindFirstChild("WinsBoard")
+	if not board then
+		return
+	end
+	local gui = board:FindFirstChild("Board") or Instance.new("SurfaceGui")
+	gui.Name = "Board"
+	gui.Face = Enum.NormalId.Front
+	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	gui.PixelsPerStud = 30
+	gui.LightInfluence = 0
+	gui:ClearAllChildren()
+	local list = Instance.new("UIListLayout")
+	list.Padding = UDim.new(0, 6)
+	list.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	list.Parent = gui
+	local function line(text, color, size)
+		local t = Instance.new("TextLabel")
+		t.Size = UDim2.new(0.92, 0, 0, size)
+		t.BackgroundTransparency = 1
+		t.Font = Enum.Font.FredokaOne
+		t.TextScaled = true
+		t.TextXAlignment = Enum.TextXAlignment.Left
+		t.TextColor3 = color
+		t.Text = text
+		t.Parent = gui
+	end
+	line("TOP WINNERS", Color3.fromRGB(255, 210, 70), 70)
+	if #rows == 0 then
+		line("Be the first champion!", Color3.fromRGB(220, 220, 255), 44)
+	end
+	for rank, r in rows do
+		line(string.format("%d. %s  -  %d", rank, r.name, r.wins), if rank <= 3 then Color3.fromRGB(120, 255, 200) else Color3.fromRGB(230, 230, 255), 44)
+	end
+	gui.Parent = board
+end
+
+function LeaderboardService:_refresh()
+	if not self.store then
+		self:_render({})
+		return
+	end
+	local ok, pages = pcall(self.store.GetSortedAsync, self.store, false, 10)
+	if not ok then
+		return
+	end
+	local rows = {}
+	for _, entry in pages:GetCurrentPage() do
+		local userId = tonumber(entry.key)
+		if userId then
+			table.insert(rows, { name = self:_nameOf(userId), wins = entry.value })
+		end
+	end
+	self:_render(rows)
+end
+
+function LeaderboardService:Start()
+	self:_render({})
+	Players.PlayerRemoving:Connect(function()
+		task.spawn(self._flush, self)
+	end)
+	while true do
+		self:_flush()
+		self:_refresh()
+		task.wait(120)
+	end
+end
+
+return LeaderboardService
+]]></string>
+          </Properties>
+        </Item>
+        <Item class="ModuleScript" referent="27">
+          <Properties>
+            <string name="Name">MatchService</string>
+            <string name="Source"><![CDATA[-- Authoritative round loop. Server samples every participant's position at TickRate, walks the
+-- 4-connected path between samples, and applies trail / capture / cut rules on the shared Grid.
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+local Config = require(ReplicatedStorage.Shared.Config)
+local Cosmetics = require(ReplicatedStorage.Shared.Cosmetics)
+local Grid = require(ReplicatedStorage.Shared.Grid)
+local GridCodec = require(ReplicatedStorage.Shared.GridCodec)
+local Maps = require(ReplicatedStorage.Shared.Maps)
+local Progression = require(ReplicatedStorage.Shared.Progression)
+local Net = require(ReplicatedStorage.Shared.Net)
+
+local G, MC = Config.Grid, Config.Match
+
+local MatchService = {
+	state = "Intermission",
+	grid = Grid.new(G.Size),
+	participants = {} :: { [number]: any }, -- slot -> participant
+	byPlayer = {} :: { [Player]: any },
+	mapIndex = 0,
+	map = Maps.List[1],
+	rng = Random.new(),
+}
+
+local function rgb(t)
+	return Color3.fromRGB(t[1], t[2], t[3])
+end
+
+function MatchService:CellCenter(x: number, z: number): Vector3
+	return Vector3.new(G.OriginX + (x - 0.5) * G.TileSize, G.FloorY, G.OriginZ + (z - 0.5) * G.TileSize)
+end
+
+function MatchService:CellAt(pos: Vector3): (number, number)
+	return math.floor((pos.X - G.OriginX) / G.TileSize) + 1, math.floor((pos.Z - G.OriginZ) / G.TileSize) + 1
+end
+
+function MatchService:AssignedColor(player: Player): Color3?
+	local p = self.byPlayer[player]
+	return p and p.color
+end
+
+function MatchService:IsPlaying(): boolean
+	return self.state == "Playing"
+end
+
+-- Participants --------------------------------------------------------------------------------
+
+function MatchService:_freeSlot(): number
+	for s = 1, 250 do
+		if not self.participants[s] then
+			return s
+		end
+	end
+	error("no free slot")
+end
+
+function MatchService:_pickInk(preferred: string?): (string, Color3)
+	local used = {}
+	for _, p in self.participants do
+		used[p.ink] = true
+	end
+	if preferred and not used[preferred] and Cosmetics.get(preferred) then
+		return preferred, rgb(Cosmetics.get(preferred).color)
+	end
+	local free = {}
+	for _, ink in Cosmetics.Inks do
+		if not used[ink.id] then
+			free[#free + 1] = ink
+		end
+	end
+	local ink = free[self.rng:NextInteger(1, math.max(1, #free))] or Cosmetics.Inks[1]
+	return ink.id, rgb(ink.color)
+end
+
+function MatchService:_newParticipant(kind: string, name: string, ink: string?)
+	local slot = self:_freeSlot()
+	local inkId, color = self:_pickInk(ink)
+	local p = {
+		slot = slot,
+		kind = kind,
+		name = name,
+		ink = inkId,
+		color = color,
+		alive = false,
+		respawnAt = 0,
+		trail = {},
+		lastCell = nil,
+		lastPos = nil,
+		lastTime = 0,
+		shieldUntil = 0,
+		dashUntil = 0,
+		strikes = 0,
+		stats = { tiles = 0, kills = 0, deaths = 0, peak = 0, captures = 0, bestLoop = 0, powerups = 0 },
+	}
+	self.participants[slot] = p
+	return p
+end
+
+function MatchService:AddPlayer(player: Player)
+	if self.byPlayer[player] or self.state ~= "Playing" then
+		return
+	end
+	local data = self.S.DataService:Get(player)
+	if not data then
+		return
+	end
+	local p = self:_newParticipant("player", player.DisplayName, data.equipped.ink)
+	p.player = player
+	p.userId = player.UserId
+	self.byPlayer[player] = p
+	if p.ink ~= data.equipped.ink then
+		self.S.EconomyService:Notify(player, "Your ink is taken this round - you're painting in " .. Cosmetics.get(p.ink).name .. ".", "info")
+	end
+	self.S.AvatarService:Refresh(player)
+	self:_balanceBots()
+	self:_sendRoster()
+end
+
+function MatchService:_remove(p)
+	self.grid:clearSlot(p.slot, p.trail)
+	self.participants[p.slot] = nil
+	if p.player then
+		self.byPlayer[p.player] = nil
+	end
+	if p.bot then
+		self.S.BotService:Destroy(p)
+	end
+end
+
+function MatchService:_balanceBots()
+	if self.state ~= "Playing" then
+		return
+	end
+	local humans, bots = 0, {}
+	for _, p in self.participants do
+		if p.kind == "player" then
+			humans += 1
+		else
+			table.insert(bots, p)
+		end
+	end
+	local want = math.clamp(MC.MinParticipants - humans, 0, MC.MaxBots)
+	while #bots < want do
+		local p = self:_newParticipant("bot", self.S.BotService:NextName())
+		self.S.BotService:Attach(p)
+		table.insert(bots, p)
+	end
+	while #bots > want do
+		-- Prefer removing the bot with the least territory to keep the round stable.
+		table.sort(bots, function(a, b)
+			return self.grid:countOf(a.slot) > self.grid:countOf(b.slot)
+		end)
+		self:_remove(table.remove(bots))
+	end
+end
+
+function MatchService:_rosterPayload()
+	local list = {}
+	for slot, p in self.participants do
+		list[#list + 1] = {
+			slot = slot,
+			name = p.name,
+			isBot = p.kind == "bot",
+			userId = p.userId or 0,
+			color = { math.floor(p.color.R * 255 + 0.5), math.floor(p.color.G * 255 + 0.5), math.floor(p.color.B * 255 + 0.5) },
+		}
+	end
+	return list
+end
+
+function MatchService:_sendRoster(target: Player?)
+	local payload = self:_rosterPayload()
+	if target then
+		Net.Roster:FireClient(target, payload)
+	else
+		Net.Roster:FireAllClients(payload)
+	end
+end
+
+-- Spawning / elimination ----------------------------------------------------------------------
+
+function MatchService:_characterParts(player: Player)
+	local char = player.Character
+	local root = char and char:FindFirstChild("HumanoidRootPart")
+	local hum = char and char:FindFirstChildOfClass("Humanoid")
+	if root and hum and hum.Health > 0 then
+		return char, root, hum
+	end
+	return nil
+end
+
+function MatchService:_spawn(p): boolean
+	local char, root, hum
+	if p.kind == "player" then
+		char, root, hum = self:_characterParts(p.player)
+		if not char then
+			return false
+		end
+	end
+	local r = MC.SpawnRadius
+	local cx, cz = self.grid:findSpawn(r, function(a, b)
+		return self.rng:NextInteger(a, b)
+	end)
+	self.grid:claimSquare(p.slot, cx, cz, r)
+	table.clear(p.trail)
+	p.alive = true
+	p.lastCell, p.lastPos = nil, nil
+	p.dashUntil = 0
+	local pos = self:CellCenter(cx, cz)
+	if p.kind == "player" then
+		root.Anchored = false
+		hum.WalkSpeed = Config.Movement.WalkSpeed
+		char:PivotTo(CFrame.new(pos + Vector3.new(0, 3.5, 0)))
+		self:_tutorial(p.player, 1, "Spawned")
+	else
+		self.S.BotService:Respawn(p, pos)
+	end
+	Net.Match:FireAllClients({ t = "spawn", slot = p.slot })
+	return true
+end
+
+function MatchService:_eliminate(victim, killer, reason: string)
+	if not victim.alive then
+		return
+	end
+	victim.alive = false
+	victim.respawnAt = os.clock() + MC.RespawnSeconds
+	local pos = victim.lastPos
+	self.grid:clearSlot(victim.slot, victim.trail)
+	table.clear(victim.trail)
+	victim.lastCell, victim.lastPos = nil, nil
+	victim.stats.deaths += 1
+	if victim.kind == "player" then
+		local data = self.S.DataService:Get(victim.player)
+		if data then
+			data.stats.deaths += 1
+		end
+		local _, root = self:_characterParts(victim.player)
+		if root then
+			root.Anchored = true
+		end
+	end
+	if killer and killer ~= victim then
+		killer.stats.kills += 1
+		if killer.kind == "player" then
+			local data = self.S.DataService:Get(killer.player)
+			if data then
+				data.stats.kills += 1
+			end
+			self.S.QuestService:Progress(killer.player, "kills", 1)
+			self.S.EconomyService:CheckAchievements(killer.player)
+		end
+	end
+	Net.Match:FireAllClients({
+		t = "elim",
+		victim = victim.slot,
+		killer = killer and killer.slot or 0,
+		reason = reason,
+		x = pos and pos.X or 0,
+		z = pos and pos.Z or 0,
+	})
+end
+
+-- Rules ---------------------------------------------------------------------------------------
+
+function MatchService:_capture(p)
+	local gained, victims = self.grid:capture(p.slot, p.trail)
+	table.clear(p.trail)
+	local now = os.clock()
+	for slot in victims do
+		local v = self.participants[slot]
+		if v and v.alive and now >= v.shieldUntil then
+			self:_eliminate(v, p, "enclosed")
+		end
+	end
+	-- A rival whose whole territory was swallowed has nowhere to close a loop: they are out.
+	for _, v in self.participants do
+		if v ~= p and v.alive and self.grid:countOf(v.slot) == 0 then
+			self:_eliminate(v, p, "overrun")
+		end
+	end
+	if gained <= 0 then
+		return
+	end
+	p.stats.tiles += gained
+	p.stats.captures += 1
+	p.stats.bestLoop = math.max(p.stats.bestLoop, gained)
+	p.stats.peak = math.max(p.stats.peak, self.grid:percentOf(p.slot))
+	if p.kind == "player" then
+		local player = p.player
+		local data = self.S.DataService:Get(player)
+		if data then
+			data.stats.tilesClaimed += gained
+			data.stats.captures += 1
+			data.stats.bestLoop = math.max(data.stats.bestLoop, gained)
+			data.stats.bestPercent = math.max(data.stats.bestPercent, math.floor(p.stats.peak))
+		end
+		self.S.QuestService:Progress(player, "tiles", gained)
+		if gained >= 50 then
+			self.S.QuestService:Progress(player, "bigloop", 1)
+		end
+		self.S.EconomyService:CheckAchievements(player)
+		self:_tutorial(player, 3, "FirstCapture")
+		Net.Match:FireClient(player, { t = "capture", n = gained })
+	end
+end
+
+function MatchService:_enterCell(p, i: number)
+	local grid = self.grid
+	local owner = grid.owner[i]
+	if owner == -1 then
+		return
+	end
+	local t = grid.trail[i]
+	if t ~= 0 and t ~= p.slot then
+		local victim = self.participants[t]
+		if not victim or not victim.alive then
+			grid:setTrail(i, 0)
+		elseif os.clock() >= victim.shieldUntil then
+			self:_eliminate(victim, p, "cut")
+		end
+		t = grid.trail[i]
+	end
+	if owner == p.slot then
+		if #p.trail > 0 then
+			self:_capture(p)
+		end
+	elseif t == p.slot then
+		local n = #p.trail
+		for k = math.max(1, n - MC.TrailGrace + 1), n do
+			if p.trail[k] == i then
+				return
+			end
+		end
+		self:_eliminate(p, nil, "self")
+	elseif t == 0 then
+		grid:setTrail(i, p.slot)
+		table.insert(p.trail, i)
+		if #p.trail == 1 and p.kind == "player" then
+			self:_tutorial(p.player, 2, "LeftZone")
+		end
+	end
+end
+
+function MatchService:SpeedOf(p): number
+	local base = if p.kind == "bot" then Config.Movement.BotSpeed else Config.Movement.WalkSpeed
+	return if os.clock() < p.dashUntil then base * Config.Movement.DashMultiplier else base
+end
+
+function MatchService:PositionOf(p): Vector3?
+	if p.kind == "bot" then
+		return p.bot.pos
+	end
+	local _, root = self:_characterParts(p.player)
+	return root and root.Position
+end
+
+function MatchService:_processMovement(p, pos: Vector3, now: number)
+	local grid = self.grid
+	if pos.Y > G.FloorY + MC.MaxPaintHeight or pos.Y < G.FloorY - 6 then
+		p.lastPos, p.lastTime = pos, now
+		return
+	end
+	local cx, cz = self:CellAt(pos)
+	if not grid:inBounds(cx, cz) then
+		p.lastPos, p.lastCell, p.lastTime = pos, nil, now
+		return
+	end
+	local i = grid:index(cx, cz)
+	if p.kind == "player" and p.lastPos then
+		-- Anti-exploit: movement faster than physically possible never paints through the gap.
+		local dt = math.max(now - p.lastTime, 1 / MC.TickRate)
+		local flat = Vector3.new(pos.X - p.lastPos.X, 0, pos.Z - p.lastPos.Z).Magnitude
+		if flat > (self:SpeedOf(p) * MC.SpeedTolerance + MC.SpeedSlack) * dt then
+			p.strikes += 1
+			if p.strikes % 20 == 1 then
+				warn(string.format("[Match] speed anomaly for %s (%.1f studs in %.2fs)", p.name, flat, dt))
+			end
+			p.lastPos, p.lastTime, p.lastCell = pos, now, i
+			return
+		end
+	end
+	p.lastPos, p.lastTime = pos, now
+	if p.lastCell == nil then
+		p.lastCell = i
+		self:_enterCell(p, i)
+		return
+	end
+	if i == p.lastCell then
+		return
+	end
+	local lx, lz = grid:coords(p.lastCell)
+	for _, c in grid:walk(lx, lz, cx, cz) do
+		self:_enterCell(p, c)
+		if not p.alive then
+			return
+		end
+	end
+	p.lastCell = i
+end
+
+-- Tutorial / onboarding funnel (server-tracked so it cannot be skipped by a client).
+function MatchService:_tutorial(player: Player, step: number, name: string)
+	local data = self.S.DataService:Get(player)
+	if not data or data.tutorialStep >= step then
+		return
+	end
+	for s = data.tutorialStep + 1, step do
+		local stepName = ({ "Spawned", "LeftZone", "FirstCapture", "FirstRoundComplete" })[s]
+		self.S.TelemetryService:Onboarding(player, s, stepName or name)
+	end
+	data.tutorialStep = step
+	if step >= 3 then
+		data.tutorialDone = true
+	end
+	self.S.DataService:MarkDirty(player)
+end
+
+-- Tick ----------------------------------------------------------------------------------------
+
+function MatchService:_tick()
+	if self.state ~= "Playing" then
+		return
+	end
+	local now = os.clock()
+	for _, p in self.participants do
+		if not p.alive and now >= p.respawnAt then
+			if not self:_spawn(p) then
+				p.respawnAt = now + 0.5
+			end
+		end
+	end
+	self.S.BotService:Step(1 / MC.TickRate, self)
+	for _, p in self.participants do
+		if p.alive then
+			local pos = self:PositionOf(p)
+			if pos then
+				self:_processMovement(p, pos, now)
+			end
+			if p.kind == "player" and p.dashUntil > 0 and now >= p.dashUntil then
+				p.dashUntil = 0
+				local _, _, hum = self:_characterParts(p.player)
+				if hum then
+					hum.WalkSpeed = Config.Movement.WalkSpeed
+				end
+			end
+		end
+	end
+	self.S.PowerupService:Step(self, now)
+	local dirty = self.grid:takeDirty()
+	if #dirty > 0 then
+		Net.GridDelta:FireAllClients(GridCodec.delta(self.grid, dirty))
+	end
+	self.S.BotService:Broadcast(self)
+end
+
+-- Round flow ----------------------------------------------------------------------------------
+
+function MatchService:_setState(state: string, endsAt: number)
+	self.state = state
+	workspace:SetAttribute("RoundState", state)
+	workspace:SetAttribute("RoundEndsAt", endsAt)
+end
+
+function MatchService:_sendSnapshot(target: Player?)
+	local buf = GridCodec.snapshot(self.grid)
+	if target then
+		Net.GridSnapshot:FireClient(target, self.map.id, buf)
+	else
+		Net.GridSnapshot:FireAllClients(self.map.id, buf)
+	end
+end
+
+-- Called (rate limited) when a client signals it is ready, so a late joiner never misses the snapshot.
+function MatchService:SendStateTo(player: Player)
+	self:_sendSnapshot(player)
+	self:_sendRoster(player)
+end
+
+function MatchService:_startRound()
+	self.mapIndex = self.mapIndex % #Maps.List + 1
+	self.map = Maps.List[self.mapIndex]
+	self.S.WorldBuilder:BuildArena(self.map)
+	self.S.PowerupService:Clear()
+	local grid = self.grid
+	grid:reset()
+	Maps.forEachBlocked(self.map, function(x, z)
+		grid:setOwner(grid:index(x, z), -1)
+	end)
+	grid:takeDirty()
+	self:_setState("Playing", workspace:GetServerTimeNow() + MC.RoundSeconds)
+	self:_sendSnapshot()
+	for _, player in Players:GetPlayers() do
+		self:AddPlayer(player)
+	end
+	self:_balanceBots()
+	self:_sendRoster()
+	Net.Match:FireAllClients({ t = "roundStart", map = self.map.id })
+end
+
+function MatchService:_endRound()
+	local grid = self.grid
+	local ranking = {}
+	for _, p in self.participants do
+		p.stats.peak = math.max(p.stats.peak, grid:percentOf(p.slot))
+		table.insert(ranking, p)
+	end
+	table.sort(ranking, function(a, b)
+		local ca, cb = grid:countOf(a.slot), grid:countOf(b.slot)
+		if ca ~= cb then
+			return ca > cb
+		end
+		return a.stats.tiles > b.stats.tiles
+	end)
+	local count = #ranking
+	local top = {}
+	for rank = 1, math.min(3, count) do
+		local p = ranking[rank]
+		top[rank] = { name = p.name, percent = grid:percentOf(p.slot), color = p.color, isBot = p.kind == "bot" }
+	end
+	self:_setState("Intermission", workspace:GetServerTimeNow() + MC.IntermissionSeconds)
+	self.S.WorldBuilder:ShowPodium(top)
+
+	for rank, p in ranking do
+		if p.kind == "player" and p.player.Parent then
+			self:_reward(p, rank, count, top)
+		end
+	end
+	for _, p in table.clone(self.participants) do
+		self:_remove(p)
+	end
+	self.S.PowerupService:Clear()
+	grid:takeDirty()
+	self:_sendRoster()
+	-- Everyone back to the hub; podium spots for human top-3.
+	for _, player in Players:GetPlayers() do
+		local char, root = self:_characterParts(player)
+		if char then
+			root.Anchored = false
+			local cf = self.S.WorldBuilder:HubCFrame(self.rng)
+			for rank, p in ranking do
+				if rank <= 3 and p.player == player then
+					cf = self.S.WorldBuilder:PodiumCFrame(rank) or cf
+				end
+			end
+			char:PivotTo(cf)
+		end
+	end
+end
+
+function MatchService:_reward(p, rank: number, count: number, top)
+	local player = p.player
+	local data = self.S.DataService:Get(player)
+	if not data then
+		return
+	end
+	local S = self.S
+	local percent = self.grid:percentOf(p.slot)
+	local multiplier = Progression.coinMultiplier(S.MonetizationService:GetPasses(player))
+	local coins, xp = Progression.roundRewards({ percent = percent, rank = rank, kills = p.stats.kills, participants = count }, multiplier)
+	local levelBefore = data.level
+	data.stats.rounds += 1
+	data.stats.powerups += p.stats.powerups
+	data.stats.bestPercent = math.max(data.stats.bestPercent, math.floor(p.stats.peak))
+	local won = rank == 1 and count >= MC.WinMinParticipants
+	if won then
+		data.stats.wins += 1
+		S.QuestService:Progress(player, "wins", 1)
+	end
+	S.QuestService:Progress(player, "rounds", 1)
+	if rank <= 3 then
+		S.QuestService:Progress(player, "top3", 1)
+	end
+	S.EconomyService:AddCoins(player, coins, "Gameplay", "RoundReward")
+	S.EconomyService:AddXp(player, xp)
+	S.EconomyService:CheckAchievements(player)
+	self:_tutorial(player, 4, "FirstRoundComplete")
+	S.TelemetryService:Custom(player, "RoundEnd", rank, { self.map.id, tostring(math.floor(percent)), tostring(p.stats.kills) })
+	S.LeaderboardService:MarkWins(player, data.stats.wins)
+	local ls = player:FindFirstChild("leaderstats")
+	if ls and ls:FindFirstChild("Wins") then
+		ls.Wins.Value = data.stats.wins
+	end
+
+	local topPayload = {}
+	for k, e in top do
+		topPayload[k] = { name = e.name, percent = e.percent, isBot = e.isBot, color = { math.floor(e.color.R * 255), math.floor(e.color.G * 255), math.floor(e.color.B * 255) } }
+	end
+	Net.Match:FireClient(player, {
+		t = "results",
+		rank = rank,
+		count = count,
+		percent = percent,
+		peak = p.stats.peak,
+		kills = p.stats.kills,
+		tiles = p.stats.tiles,
+		coins = coins,
+		xp = xp,
+		won = won,
+		levelBefore = levelBefore,
+		levelAfter = data.level,
+		top = topPayload,
+		map = self.map.name,
+	})
+end
+
+function MatchService:_updateLeaderstats()
+	for player, p in self.byPlayer do
+		local ls = player:FindFirstChild("leaderstats")
+		local turf = ls and ls:FindFirstChild("Turf")
+		if turf then
+			turf.Value = string.format("%.1f%%", self.grid:percentOf(p.slot))
+		end
+	end
+end
+
+function MatchService:Init(S)
+	self.S = S
+	workspace:SetAttribute("RoundState", "Intermission")
+	workspace:SetAttribute("RoundEndsAt", 0)
+end
+
+function MatchService:Start()
+	local S = self.S
+	S.DataService.Loaded:Connect(function(player, data)
+		local ls = Instance.new("Folder")
+		ls.Name = "leaderstats"
+		local wins = Instance.new("IntValue")
+		wins.Name = "Wins"
+		wins.Value = data.stats.wins
+		wins.Parent = ls
+		local turf = Instance.new("StringValue")
+		turf.Name = "Turf"
+		turf.Value = "-"
+		turf.Parent = ls
+		ls.Parent = player
+		self:AddPlayer(player)
+	end)
+	Players.PlayerRemoving:Connect(function(player)
+		local p = self.byPlayer[player]
+		if p then
+			self:_remove(p)
+			self:_balanceBots()
+			self:_sendRoster()
+		end
+	end)
+
+	local acc, statsAcc = 0, 0
+	RunService.Heartbeat:Connect(function(dt)
+		acc += dt
+		statsAcc += dt
+		if acc >= 1 / MC.TickRate then
+			acc = math.min(acc - 1 / MC.TickRate, 1 / MC.TickRate)
+			debug.profilebegin("ChromaTurf.MatchTick")
+			local ok, err = pcall(self._tick, self)
+			debug.profileend()
+			if not ok then
+				warn("[Match] tick error: " .. tostring(err))
+			end
+		end
+		if statsAcc >= 1 then
+			statsAcc = 0
+			self:_updateLeaderstats()
+		end
+	end)
+
+	-- Characters that respawn through Roblox (reset/fall) re-enter via our spawn rules.
+	local function hook(player)
+		player.CharacterAdded:Connect(function()
+			local p = self.byPlayer[player]
+			if p and p.alive then
+				self:_eliminate(p, nil, "reset")
+			end
+		end)
+	end
+	Players.PlayerAdded:Connect(hook)
+	for _, player in Players:GetPlayers() do
+		hook(player)
+	end
+
+	self:_setState("Intermission", workspace:GetServerTimeNow() + MC.IntermissionSeconds)
+	task.wait(MC.IntermissionSeconds)
+	while true do
+		self:_startRound()
+		while workspace:GetServerTimeNow() < workspace:GetAttribute("RoundEndsAt") do
+			task.wait(0.25)
+		end
+		self:_endRound()
+		task.wait(MC.IntermissionSeconds)
+	end
+end
+
+return MatchService
+]]></string>
+          </Properties>
+        </Item>
+        <Item class="ModuleScript" referent="28">
+          <Properties>
+            <string name="Name">MonetizationService</string>
+            <string name="Source"><![CDATA[-- Game passes and developer products. Server-authoritative, idempotent receipt processing.
+local MarketplaceService = game:GetService("MarketplaceService")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Config = require(ReplicatedStorage.Shared.Config)
+local ReceiptLogic = require(script.Parent.Parent.Core.ReceiptLogic)
+
+local M = Config.Monetization
+
+local MonetizationService = { passes = {} :: { [Player]: { [string]: boolean } } }
+
+local productById = {}
+for key, p in M.Products do
+	if p.id ~= 0 then
+		productById[p.id] = { key = key, def = p }
+	end
+end
+local passById = {}
+for key, p in M.GamePasses do
+	if p.id ~= 0 then
+		passById[p.id] = key
+	end
+end
+
+function MonetizationService:GetPasses(player: Player): { [string]: boolean }
+	return self.passes[player] or {}
+end
+
+function MonetizationService:HasPass(player: Player, key: string): boolean
+	return self:GetPasses(player)[key] == true
+end
+
+function MonetizationService:LoadPasses(player: Player)
+	local owned = {}
+	for key, p in M.GamePasses do
+		if p.id ~= 0 then
+			local ok, has = pcall(MarketplaceService.UserOwnsGamePassAsync, MarketplaceService, player.UserId, p.id)
+			owned[key] = ok and has == true
+		end
+	end
+	self.passes[player] = owned
+end
+
+function MonetizationService:_grantPass(player: Player, key: string)
+	local owned = self.passes[player] or {}
+	owned[key] = true
+	self.passes[player] = owned
+	self.S.TelemetryService:StoreFunnel(player, 4, "PurchaseComplete")
+	self.S.TelemetryService:Custom(player, "PassPurchased", M.GamePasses[key].price, { key })
+	self.S.AvatarService:Refresh(player)
+	self.S.DataService:MarkDirty(player)
+	self.S.EconomyService:Notify(player, "Thank you! " .. M.GamePasses[key].name .. " is now active.", "gold")
+end
+
+-- kind: "pass" | "product". Returns a result table for the client.
+function MonetizationService:Prompt(player: Player, kind: string, key: string)
+	local def = if kind == "pass" then M.GamePasses[key] elseif kind == "product" then M.Products[key] else nil
+	if not def then
+		return { ok = false, err = "unknown" }
+	end
+	if def.id == 0 then
+		return { ok = false, err = "unavailable" }
+	end
+	if kind == "pass" and self:HasPass(player, key) then
+		return { ok = false, err = "owned" }
+	end
+	self.S.TelemetryService:StoreFunnel(player, 3, "PromptPurchase")
+	if kind == "pass" then
+		MarketplaceService:PromptGamePassPurchase(player, def.id)
+	else
+		MarketplaceService:PromptProductPurchase(player, def.id)
+	end
+	return { ok = true }
+end
+
+function MonetizationService:Init(S)
+	self.S = S
+end
+
+function MonetizationService:Start()
+	local S = self.S
+
+	MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, passId, purchased)
+		local key = passById[passId]
+		if purchased and key then
+			self:_grantPass(player, key)
+		end
+	end)
+
+	MarketplaceService.ProcessReceipt = function(info)
+		local decision = ReceiptLogic.process(info, {
+			maxHistory = Config.Data.MaxReceiptHistory,
+			now = os.time,
+			getProfile = function(userId)
+				local player = Players:GetPlayerByUserId(userId)
+				return player and S.DataService:GetProfile(player)
+			end,
+			grant = function(profile, productId)
+				local entry = productById[productId]
+				if not entry then
+					warn("[Monetization] receipt for unknown product " .. tostring(productId))
+					return false
+				end
+				local data = profile.data
+				data.coins = math.min(Config.Economy.MaxCoins, data.coins + entry.def.coins)
+				data.stats.robuxSpent += info.CurrencySpent or 0
+				local player = Players:GetPlayerByUserId(info.PlayerId)
+				if player then
+					S.TelemetryService:Economy(player, "Source", entry.def.coins, data.coins, "IAP", entry.key)
+					S.TelemetryService:StoreFunnel(player, 4, "PurchaseComplete")
+				end
+				return true
+			end,
+			save = function(profile)
+				return profile:save(false)
+			end,
+		})
+		local player = Players:GetPlayerByUserId(info.PlayerId)
+		if decision == "Granted" and player then
+			local entry = productById[info.ProductId]
+			S.DataService:MarkDirty(player)
+			S.EconomyService:Notify(player, string.format("+%d coins. Thanks for supporting Chroma Turf!", entry.def.coins), "gold")
+		end
+		return if decision == "Granted"
+			then Enum.ProductPurchaseDecision.PurchaseGranted
+			else Enum.ProductPurchaseDecision.NotProcessedYet
+	end
+
+	Players.PlayerRemoving:Connect(function(player)
+		self.passes[player] = nil
+	end)
+end
+
+return MonetizationService
+]]></string>
+          </Properties>
+        </Item>
+        <Item class="ModuleScript" referent="29">
+          <Properties>
+            <string name="Name">PowerupService</string>
+            <string name="Source"><![CDATA[-- Arena power-ups: Dash (speed), Shield (trail can't be cut), Ink Bomb (instant 5x5 claim).
+local CollectionService = game:GetService("CollectionService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Config = require(ReplicatedStorage.Shared.Config)
+local Net = require(ReplicatedStorage.Shared.Net)
+
+local PC = Config.Powerups
+
+local PowerupService = { active = {}, nextSpawn = 0, rng = Random.new() }
+
+local KINDS = {
+	Dash = { color = Color3.fromRGB(255, 220, 60), text = "DASH" },
+	Shield = { color = Color3.fromRGB(90, 200, 255), text = "SHIELD" },
+	Bomb = { color = Color3.fromRGB(255, 90, 170), text = "INK BOMB" },
+}
+local ORDER = { "Dash", "Shield", "Bomb" }
+
+function PowerupService:Clear()
+	for _, pu in self.active do
+		pu.part:Destroy()
+	end
+	table.clear(self.active)
+	self.nextSpawn = os.clock() + PC.SpawnInterval
+end
+
+function PowerupService:_spawn(match)
+	local grid = match.grid
+	for _ = 1, 30 do
+		local x, z = self.rng:NextInteger(2, grid.size - 1), self.rng:NextInteger(2, grid.size - 1)
+		local i = grid:index(x, z)
+		if grid.owner[i] == 0 and grid.trail[i] == 0 then
+			local kind = ORDER[self.rng:NextInteger(1, #ORDER)]
+			local def = KINDS[kind]
+			local pos = match:CellCenter(x, z) + Vector3.new(0, 2.5, 0)
+			local part = Instance.new("Part")
+			part.Name = "Powerup_" .. kind
+			part.Shape = Enum.PartType.Ball
+			part.Size = Vector3.one * 3
+			part.Anchored = true
+			part.CanCollide = false
+			part.CanQuery = false
+			part.CanTouch = false
+			part.Material = Enum.Material.Neon
+			part.Color = def.color
+			part.Position = pos
+			local bb = Instance.new("BillboardGui")
+			bb.Size = UDim2.fromOffset(120, 30)
+			bb.StudsOffset = Vector3.new(0, 3, 0)
+			bb.MaxDistance = 120
+			local t = Instance.new("TextLabel")
+			t.Size = UDim2.fromScale(1, 1)
+			t.BackgroundTransparency = 1
+			t.Font = Enum.Font.FredokaOne
+			t.TextScaled = true
+			t.Text = def.text
+			t.TextColor3 = def.color
+			t.TextStrokeTransparency = 0.2
+			t.Parent = bb
+			bb.Parent = part
+			CollectionService:AddTag(part, "Powerup")
+			part.Parent = match.S.WorldBuilder.arena
+			table.insert(self.active, { kind = kind, pos = pos, part = part })
+			return
+		end
+	end
+end
+
+function PowerupService:_apply(match, p, kind: string, now: number)
+	local grid = match.grid
+	if kind == "Dash" then
+		p.dashUntil = now + PC.Dash.duration
+		if p.kind == "player" then
+			local _, _, hum = match:_characterParts(p.player)
+			if hum then
+				hum.WalkSpeed = Config.Movement.WalkSpeed * Config.Movement.DashMultiplier
+			end
+		end
+	elseif kind == "Shield" then
+		p.shieldUntil = now + PC.Shield.duration
+	elseif kind == "Bomb" then
+		local pos = match:PositionOf(p)
+		if pos then
+			local cx, cz = match:CellAt(pos)
+			local gained = grid:claimSquare(p.slot, cx, cz, PC.Bomb.radius)
+			p.stats.tiles += gained
+			if p.kind == "player" then
+				local data = match.S.DataService:Get(p.player)
+				if data then
+					data.stats.tilesClaimed += gained
+				end
+				match.S.QuestService:Progress(p.player, "tiles", gained)
+			end
+		end
+	end
+	p.stats.powerups += 1
+	if p.kind == "player" then
+		match.S.QuestService:Progress(p.player, "powerups", 1)
+	end
+	Net.Match:FireAllClients({ t = "powerup", slot = p.slot, kind = kind, duration = PC[kind].duration or 0 })
+end
+
+function PowerupService:Step(match, now: number)
+	if #self.active < PC.MaxActive and now >= self.nextSpawn then
+		self.nextSpawn = now + PC.SpawnInterval
+		self:_spawn(match)
+	end
+	for k = #self.active, 1, -1 do
+		local pu = self.active[k]
+		for _, p in match.participants do
+			if p.alive then
+				local pos = match:PositionOf(p)
+				if pos and Vector3.new(pos.X - pu.pos.X, 0, pos.Z - pu.pos.Z).Magnitude <= PC.PickupRadius then
+					table.remove(self.active, k)
+					pu.part:Destroy()
+					self:_apply(match, p, pu.kind, now)
+					break
+				end
+			end
+		end
+	end
+end
+
+return PowerupService
+]]></string>
+          </Properties>
+        </Item>
+        <Item class="ModuleScript" referent="30">
+          <Properties>
+            <string name="Name">QuestService</string>
+            <string name="Source"><![CDATA[-- Daily quests: 3 per UTC day, same for everyone, progress tracked server-side.
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Progression = require(ReplicatedStorage.Shared.Progression)
+
+local QuestService = {}
+
+function QuestService:Init(S)
+	self.S = S
+end
+
+function QuestService:Ensure(data)
+	local today = Progression.dayNumber(os.time())
+	if data.quests.day ~= today then
+		local list = {}
+		for _, id in Progression.questsForDay(today) do
+			list[#list + 1] = { id = id, progress = 0, claimed = false }
+		end
+		data.quests = { day = today, list = list }
+	end
+end
+
+function QuestService:Progress(player: Player, kind: string, amount: number)
+	local data = self.S.DataService:Get(player)
+	if not data or amount <= 0 then
+		return
+	end
+	self:Ensure(data)
+	for _, q in data.quests.list do
+		local def = Progression.quest(q.id)
+		if def and def.kind == kind and not q.claimed and q.progress < def.goal then
+			q.progress = math.min(def.goal, q.progress + amount)
+			if q.progress >= def.goal then
+				self.S.EconomyService:Notify(player, "Quest complete: " .. def.text .. " - claim it in Quests!", "quest")
+			end
+			self.S.DataService:MarkDirty(player)
+		end
+	end
+end
+
+function QuestService:Claim(player: Player, id: string)
+	local data = self.S.DataService:Get(player)
+	if not data then
+		return { ok = false, err = "loading" }
+	end
+	self:Ensure(data)
+	for _, q in data.quests.list do
+		if q.id == id then
+			local def = Progression.quest(id)
+			if q.claimed or q.progress < def.goal then
+				return { ok = false, err = "notready" }
+			end
+			q.claimed = true
+			self.S.EconomyService:AddCoins(player, def.coins, "Gameplay", "Quest_" .. id)
+			self.S.EconomyService:AddXp(player, def.xp)
+			self.S.TelemetryService:Custom(player, "QuestClaim", 1, { id })
+			return { ok = true }
+		end
+	end
+	return { ok = false, err = "invalid" }
+end
+
+function QuestService:Start()
+	self.S.DataService.Loaded:Connect(function(_, data)
+		self:Ensure(data)
+	end)
+end
+
+return QuestService
+]]></string>
+          </Properties>
+        </Item>
+        <Item class="ModuleScript" referent="31">
+          <Properties>
+            <string name="Name">RequestRouter</string>
+            <string name="Source"><![CDATA[-- Single validated, rate-limited entry point for client actions. Clients never send amounts.
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Config = require(ReplicatedStorage.Shared.Config)
+local Net = require(ReplicatedStorage.Shared.Net)
+local RateLimiter = require(script.Parent.Parent.Core.RateLimiter)
+
+local RequestRouter = {}
+
+local function isId(v): boolean
+	return type(v) == "string" and #v > 0 and #v <= 64
+end
+
+local SETTINGS = {
+	sfx = function(v)
+		return type(v) == "number" and v == v and v >= 0 and v <= 1
+	end,
+	music = function(v)
+		return type(v) == "number" and v == v and v >= 0 and v <= 1
+	end,
+	camera = function(v)
+		return v == "top" or v == "classic"
+	end,
+	reducedFx = function(v)
+		return type(v) == "boolean"
+	end,
+}
+
+function RequestRouter:Init(S)
+	self.S = S
+	self.requestLimiter = RateLimiter.new(Config.RateLimits.Request.capacity, Config.RateLimits.Request.refillPerSecond)
+	self.eventLimiter = RateLimiter.new(Config.RateLimits.ClientEvent.capacity, Config.RateLimits.ClientEvent.refillPerSecond)
+	self.handlers = {
+		buy = function(player, id)
+			return if isId(id) then S.EconomyService:BuyCosmetic(player, id) else nil
+		end,
+		equip = function(player, id)
+			return if isId(id) then S.EconomyService:Equip(player, id) else nil
+		end,
+		claimQuest = function(player, id)
+			return if isId(id) then S.QuestService:Claim(player, id) else nil
+		end,
+		claimDaily = function(player)
+			return S.EconomyService:ClaimDaily(player)
+		end,
+		setting = function(player, arg, data)
+			if type(arg) ~= "table" or not SETTINGS[arg.key] or not SETTINGS[arg.key](arg.value) then
+				return nil
+			end
+			data.settings[arg.key] = arg.value
+			S.DataService:MarkDirty(player)
+			return { ok = true }
+		end,
+		prompt = function(player, arg)
+			if type(arg) ~= "table" or not isId(arg.kind) or not isId(arg.key) then
+				return nil
+			end
+			return S.MonetizationService:Prompt(player, arg.kind, arg.key)
+		end,
+	}
+end
+
+function RequestRouter:Start()
+	local S = self.S
+	Net.Request.OnServerInvoke = function(player, action, arg)
+		if type(action) ~= "string" or not self.handlers[action] then
+			return { ok = false, err = "unknown" }
+		end
+		if not self.requestLimiter:allow(player) then
+			return { ok = false, err = "slow" }
+		end
+		local data = S.DataService:Get(player)
+		if not data then
+			return { ok = false, err = "loading" }
+		end
+		local ok, result = pcall(self.handlers[action], player, arg, data)
+		if not ok then
+			warn("[Request] " .. action .. " failed: " .. tostring(result))
+			return { ok = false, err = "error" }
+		end
+		return result or { ok = false, err = "invalid" }
+	end
+
+	-- Fire-and-forget hints used only for analytics funnels.
+	Net.ClientEvent.OnServerEvent:Connect(function(player, kind, arg)
+		if not self.eventLimiter:allow(player) or type(kind) ~= "string" then
+			return
+		end
+		if kind == "ready" then
+			S.MatchService:SendStateTo(player)
+		elseif kind == "storeOpen" then
+			S.TelemetryService:StoreFunnel(player, 1, "OpenStore", true)
+		elseif kind == "storeView" and isId(arg) then
+			S.TelemetryService:StoreFunnel(player, 2, "ViewItem")
+		elseif kind == "invite" then
+			S.TelemetryService:Custom(player, "InvitePrompt")
+		end
+	end)
+
+	Players.PlayerRemoving:Connect(function(player)
+		self.requestLimiter:forget(player)
+		self.eventLimiter:forget(player)
+	end)
+end
+
+return RequestRouter
+]]></string>
+          </Properties>
+        </Item>
+        <Item class="ModuleScript" referent="32">
+          <Properties>
+            <string name="Name">TelemetryService</string>
+            <string name="Source"><![CDATA[-- Thin, failure-proof wrapper over Roblox AnalyticsService. No personal data is logged:
+-- AnalyticsService attributes events to the Player internally; we never send names or chat.
+local AnalyticsService = game:GetService("AnalyticsService")
+local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
+
+local TelemetryService = { counters = {}, shopSessions = {} }
+
+-- Analytics must never break gameplay: argument building and the call itself are both protected.
+local function call(method: string, build: () -> ...any)
+	local ok, err = pcall(function()
+		AnalyticsService[method](AnalyticsService, build())
+	end)
+	if not ok and RunService:IsStudio() then
+		warn("[Telemetry] " .. method .. " failed: " .. tostring(err))
+	end
+end
+
+function TelemetryService:Count(name: string, n: number?)
+	self.counters[name] = (self.counters[name] or 0) + (n or 1)
+end
+
+-- Steps must be logged in increasing order starting at 1 (Roblox onboarding funnel rules).
+function TelemetryService:Onboarding(player: Player, step: number, name: string)
+	self:Count("onboarding_" .. name)
+	call("LogOnboardingFunnelStepEvent", function()
+		return player, step, name
+	end)
+end
+
+-- Store funnel: 1 OpenStore, 2 ViewItem, 3 PromptPurchase, 4 PurchaseComplete.
+function TelemetryService:StoreFunnel(player: Player, step: number, name: string, newSession: boolean?)
+	if newSession or not self.shopSessions[player] then
+		self.shopSessions[player] = HttpService:GenerateGUID(false)
+	end
+	self:Count("store_" .. name)
+	local session = self.shopSessions[player]
+	call("LogFunnelStepEvent", function()
+		return player, "Store", session, step, name
+	end)
+end
+
+-- flow: "Source" | "Sink"; txType: Enum.AnalyticsEconomyTransactionType name (Gameplay, IAP, Shop, TimedReward, Onboarding...)
+function TelemetryService:Economy(player: Player, flow: string, amount: number, balance: number, txType: string, sku: string?)
+	if amount <= 0 then
+		return
+	end
+	self:Count("coins_" .. flow, amount)
+	call("LogEconomyEvent", function()
+		return player, Enum.AnalyticsEconomyFlowType[flow], "Coins", amount, balance, txType, sku or txType
+	end)
+end
+
+function TelemetryService:Custom(player: Player, name: string, value: number?, fields: { string }?)
+	self:Count(name)
+	call("LogCustomEvent", function()
+		local custom = nil
+		if fields then
+			custom = {}
+			local keys = {
+				Enum.AnalyticsCustomFieldKeys.CustomField01.Name,
+				Enum.AnalyticsCustomFieldKeys.CustomField02.Name,
+				Enum.AnalyticsCustomFieldKeys.CustomField03.Name,
+			}
+			for k = 1, math.min(3, #fields) do
+				custom[keys[k]] = fields[k]
+			end
+		end
+		return player, name, value or 1, custom
+	end)
+end
+
+function TelemetryService:Init()
+	game:GetService("Players").PlayerRemoving:Connect(function(player)
+		self.shopSessions[player] = nil
+	end)
+	game:BindToClose(function()
+		if RunService:IsStudio() then
+			print("[Telemetry] session counters:", HttpService:JSONEncode(self.counters))
+		end
+	end)
+end
+
+return TelemetryService
+]]></string>
+          </Properties>
+        </Item>
+        <Item class="ModuleScript" referent="33">
+          <Properties>
+            <string name="Name">WorldBuilder</string>
+            <string name="Source"><![CDATA[-- Procedural world: hub (spawn, podium, signage, wins board) and themed arenas. Original geometry only.
+local Lighting = game:GetService("Lighting")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Config = require(ReplicatedStorage.Shared.Config)
+local Maps = require(ReplicatedStorage.Shared.Maps)
+
+local G = Config.Grid
+local WorldBuilder = {}
+
+local function rgb(t)
+	return Color3.fromRGB(t[1], t[2], t[3])
+end
+
+local function part(props)
+	local p = Instance.new("Part")
+	p.Anchored = true
+	p.TopSurface = Enum.SurfaceType.Smooth
+	p.BottomSurface = Enum.SurfaceType.Smooth
+	p.Material = Enum.Material.SmoothPlastic
+	for k, v in props do
+		p[k] = v
+	end
+	return p
+end
+
+local function decor(props)
+	props.CanCollide = false
+	props.CanQuery = false
+	props.CanTouch = false
+	props.CastShadow = props.CastShadow or false
+	return part(props)
+end
+
+local function label(parent, face, text, color, bg)
+	local gui = Instance.new("SurfaceGui")
+	gui.Face = face
+	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	gui.PixelsPerStud = 40
+	gui.LightInfluence = 0
+	local t = Instance.new("TextLabel")
+	t.Size = UDim2.fromScale(1, 1)
+	t.BackgroundColor3 = bg or Color3.new(0, 0, 0)
+	t.BackgroundTransparency = if bg then 0 else 1
+	t.Text = text
+	t.TextScaled = true
+	t.Font = Enum.Font.FredokaOne
+	t.TextColor3 = color
+	t.Parent = gui
+	gui.Parent = parent
+	return t
+end
+
+local function hubOrigin(): Vector3
+	local h = Config.Match.HubPosition
+	return Vector3.new(h[1], h[2], h[3])
+end
+
+function WorldBuilder:HubCFrame(rng: Random): CFrame
+	local o = hubOrigin()
+	local offset = Vector3.new(rng:NextNumber(-14, 14), 4, rng:NextNumber(-10, 6))
+	return CFrame.lookAt(o + offset, o + offset + Vector3.new(0, 0, 1))
+end
+
+function WorldBuilder:PodiumCFrame(rank: number): CFrame?
+	local block = self.podium[rank]
+	if not block then
+		return nil
+	end
+	local top = block.Position + Vector3.new(0, block.Size.Y / 2 + 3, 0)
+	return CFrame.lookAt(top, top - Vector3.new(0, 0, 1))
+end
+
+function WorldBuilder:ShowPodium(top)
+	for rank, block in self.podium do
+		local entry = top[rank]
+		self.podiumLabels[rank].Text = if entry then entry.name else ""
+		self.podiumLabels[rank].TextColor3 = if entry then entry.color else Color3.new(1, 1, 1)
+		block.Color = if entry then entry.color else Color3.fromRGB(60, 60, 90)
+	end
+end
+
+function WorldBuilder:_buildHub()
+	local hub = Instance.new("Folder")
+	hub.Name = "Hub"
+	local o = hubOrigin()
+
+	part({ Name = "Floor", Size = Vector3.new(96, 2, 64), Position = o - Vector3.new(0, 1, 0), Color = Color3.fromRGB(34, 30, 60), Parent = hub })
+	-- Checker inlay so the hub previews the core visual language.
+	for x = -3, 3 do
+		for z = -2, 2 do
+			if (x + z) % 2 == 0 then
+				decor({
+					Size = Vector3.new(6, 0.1, 6),
+					Position = o + Vector3.new(x * 6, 0.05, z * 6),
+					Color = Color3.fromHSV(((x + 3) / 7), 0.55, 0.95),
+					Material = Enum.Material.Neon,
+					Transparency = 0.35,
+					Parent = hub,
+				})
+			end
+		end
+	end
+
+	local spawn = Instance.new("SpawnLocation")
+	spawn.Name = "HubSpawn"
+	spawn.Anchored = true
+	spawn.Neutral = true
+	spawn.Duration = 0
+	spawn.Size = Vector3.new(10, 0.4, 10)
+	spawn.CFrame = CFrame.lookAt(o + Vector3.new(0, 0.2, -12), o + Vector3.new(0, 0.2, 10))
+	spawn.Material = Enum.Material.Neon
+	spawn.Color = Color3.fromRGB(80, 230, 255)
+	spawn.Transparency = 0.4
+	spawn.Parent = hub
+
+	-- Rails
+	for _, r in { { 0, 32, 96, 1 }, { 0, -32, 96, 1 }, { 48, 0, 1, 64 }, { -48, 0, 1, 64 } } do
+		part({ Size = Vector3.new(r[3], 4, r[4]), Position = o + Vector3.new(r[1], 2, r[2]), Transparency = 0.7, Material = Enum.Material.Glass, Color = Color3.fromRGB(150, 200, 255), Parent = hub })
+		decor({ Size = Vector3.new(r[3], 0.4, r[4]), Position = o + Vector3.new(r[1], 4.2, r[2]), Material = Enum.Material.Neon, Color = Color3.fromRGB(255, 70, 200), Parent = hub })
+	end
+
+	-- Podium (2nd, 1st, 3rd from left to right as seen by players)
+	self.podium, self.podiumLabels = {}, {}
+	for rank, spec in { { 0, 6 }, { 9, 4 }, { -9, 2.5 } } do
+		local block = part({
+			Name = "Podium" .. rank,
+			Size = Vector3.new(8, spec[2], 8),
+			Position = o + Vector3.new(spec[1], spec[2] / 2, 20),
+			Color = Color3.fromRGB(60, 60, 90),
+			Parent = hub,
+		})
+		label(block, Enum.NormalId.Front, tostring(rank), Color3.new(1, 1, 1))
+		local bb = Instance.new("BillboardGui")
+		bb.Size = UDim2.fromOffset(220, 50)
+		bb.StudsOffset = Vector3.new(0, spec[2] / 2 + 7, 0)
+		bb.AlwaysOnTop = false
+		bb.MaxDistance = 150
+		local t = Instance.new("TextLabel")
+		t.Size = UDim2.fromScale(1, 1)
+		t.BackgroundTransparency = 1
+		t.Font = Enum.Font.FredokaOne
+		t.TextScaled = true
+		t.TextStrokeTransparency = 0.3
+		t.Text = ""
+		t.Parent = bb
+		bb.Parent = block
+		self.podium[rank] = block
+		self.podiumLabels[rank] = t
+	end
+
+	local sign = part({ Name = "TitleSign", Size = Vector3.new(44, 10, 1), Position = o + Vector3.new(0, 16, 30), Color = Color3.fromRGB(20, 18, 40), Parent = hub })
+	local title = label(sign, Enum.NormalId.Front, "CHROMA TURF", Color3.fromRGB(255, 255, 255))
+	local grad = Instance.new("UIGradient")
+	grad.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(62, 240, 178)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(72, 170, 255)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 104, 200)),
+	})
+	grad.Parent = title
+	decor({ Size = Vector3.new(46, 0.6, 1.4), Position = o + Vector3.new(0, 10.8, 30), Material = Enum.Material.Neon, Color = Color3.fromRGB(80, 230, 255), Parent = hub })
+
+	local board = part({ Name = "WinsBoard", Size = Vector3.new(18, 22, 1), Position = o + Vector3.new(-36, 11, 22), Color = Color3.fromRGB(20, 18, 40), Parent = hub })
+	board.CFrame = CFrame.lookAt(board.Position, board.Position + Vector3.new(0.5, 0, -1))
+	local how = part({ Name = "HowToBoard", Size = Vector3.new(18, 14, 1), Position = o + Vector3.new(36, 7, 22), Color = Color3.fromRGB(20, 18, 40), Parent = hub })
+	how.CFrame = CFrame.lookAt(how.Position, how.Position + Vector3.new(-0.5, 0, -1))
+	label(how, Enum.NormalId.Front, "HOW TO PLAY\n\n1. Leave your zone\n2. Loop back home\n3. Claim everything inside\n4. Cut rival trails!", Color3.fromRGB(230, 240, 255))
+
+	hub.Parent = workspace
+	self.hub = hub
+end
+
+local function cellRect(r)
+	local T = G.TileSize
+	local x0, x1 = G.OriginX + (r[1] - 1) * T, G.OriginX + r[3] * T
+	local z0, z1 = G.OriginZ + (r[2] - 1) * T, G.OriginZ + r[4] * T
+	return Vector3.new((x0 + x1) / 2, 0, (z0 + z1) / 2), Vector3.new(x1 - x0, 0, z1 - z0)
+end
+
+function WorldBuilder:_decor(folder, map, rng: Random)
+	local accent, wall = rgb(map.accent), rgb(map.wall)
+	if map.decor == "towers" then
+		decor({ Size = Vector3.new(1400, 2, 1400), Position = Vector3.new(0, -60, 0), Color = Color3.fromRGB(14, 12, 30), Parent = folder })
+		for k = 1, 18 do
+			local a = (k / 18) * math.pi * 2
+			local radius = rng:NextNumber(175, 240)
+			local h = rng:NextNumber(30, 95)
+			local pos = Vector3.new(math.cos(a) * radius, h / 2 - 30, math.sin(a) * radius)
+			decor({ Size = Vector3.new(10, h, 10), Position = pos, Color = Color3.fromRGB(30, 28, 60), Parent = folder })
+			decor({ Size = Vector3.new(10.6, 1, 10.6), Position = pos + Vector3.new(0, h / 2, 0), Material = Enum.Material.Neon, Color = if k % 2 == 0 then accent else wall, Parent = folder })
+		end
+		for _ = 1, 10 do
+			local p = decor({ Size = Vector3.one * rng:NextNumber(4, 9), Material = Enum.Material.Neon, Transparency = 0.2, Color = Color3.fromHSV(rng:NextNumber(), 0.6, 1), Parent = folder })
+			p.CFrame = CFrame.new(rng:NextNumber(-260, 260), rng:NextNumber(40, 80), rng:NextNumber(-260, 260))
+				* CFrame.Angles(rng:NextNumber(0, 6), rng:NextNumber(0, 6), rng:NextNumber(0, 6))
+		end
+	elseif map.decor == "docks" then
+		decor({ Size = Vector3.new(1400, 1, 1400), Position = Vector3.new(0, -7, 0), Color = Color3.fromRGB(40, 130, 170), Material = Enum.Material.Glass, Transparency = 0.15, Reflectance = 0.15, Parent = folder })
+		for side = -1, 1, 2 do
+			for k = -4, 4 do
+				decor({ Size = Vector3.new(3, 12, 3), Position = Vector3.new(k * 28, -4, side * (G.Extent / 2 + 14)), Color = Color3.fromRGB(110, 72, 44), Material = Enum.Material.Wood, Parent = folder })
+			end
+			decor({ Size = Vector3.new(G.Extent + 20, 1, 14), Position = Vector3.new(0, 1.5, side * (G.Extent / 2 + 14)), Color = Color3.fromRGB(150, 104, 66), Material = Enum.Material.WoodPlanks, Parent = folder })
+		end
+		for _ = 1, 14 do
+			local s = rng:NextNumber(4, 7)
+			decor({ Size = Vector3.one * s, Position = Vector3.new(rng:NextNumber(-130, 130), 2 + s / 2, (if rng:NextNumber() > 0.5 then 1 else -1) * (G.Extent / 2 + rng:NextNumber(10, 18))), Color = Color3.fromRGB(170, 120, 70), Material = Enum.Material.WoodPlanks, Parent = folder })
+		end
+		for k = 1, 6 do
+			local hull = decor({ Size = Vector3.new(14, 4, 34), Color = if k % 2 == 0 then accent else Color3.fromRGB(240, 240, 240), Parent = folder })
+			hull.CFrame = CFrame.new(math.cos(k) * 230, -5, math.sin(k) * 230) * CFrame.Angles(0, k, 0)
+			decor({ Size = Vector3.new(1, 18, 1), Position = hull.Position + Vector3.new(0, 11, 0), Color = Color3.fromRGB(120, 90, 60), Parent = folder })
+		end
+	elseif map.decor == "crystals" then
+		decor({ Size = Vector3.new(1400, 2, 1400), Position = Vector3.new(0, -30, 0), Color = Color3.fromRGB(235, 245, 255), Material = Enum.Material.Snow, Parent = folder })
+		for _ = 1, 26 do
+			local a = rng:NextNumber(0, math.pi * 2)
+			local radius = rng:NextNumber(170, 280)
+			local h = rng:NextNumber(20, 70)
+			local p = decor({ Size = Vector3.new(rng:NextNumber(6, 12), h, rng:NextNumber(6, 12)), Material = Enum.Material.Glass, Transparency = 0.25, Color = Color3.fromRGB(150, 220, 255), Parent = folder })
+			p.CFrame = CFrame.new(math.cos(a) * radius, -30 + h / 2, math.sin(a) * radius) * CFrame.Angles(rng:NextNumber(-0.3, 0.3), a, rng:NextNumber(-0.3, 0.3))
+		end
+	end
+end
+
+function WorldBuilder:_lighting(map)
+	local L = map.lighting
+	Lighting.ClockTime = L.ClockTime
+	Lighting.Ambient = rgb(L.Ambient)
+	Lighting.OutdoorAmbient = rgb(L.OutdoorAmbient)
+	Lighting.Brightness = L.Brightness
+	local function ensure(class)
+		local inst = Lighting:FindFirstChildOfClass(class)
+		if not inst then
+			inst = Instance.new(class)
+			inst.Parent = Lighting
+		end
+		return inst
+	end
+	local atm = ensure("Atmosphere")
+	atm.Density = L.Atmosphere[1]
+	atm.Color = rgb(L.Atmosphere[2])
+	atm.Decay = rgb(L.Atmosphere[2])
+	atm.Haze = 1.5
+	atm.Glare = 0.2
+	local bloom = ensure("BloomEffect")
+	bloom.Intensity = 0.7
+	bloom.Size = 24
+	bloom.Threshold = 1.4
+	local cc = ensure("ColorCorrectionEffect")
+	cc.TintColor = rgb(L.Tint)
+	cc.Saturation = 0.12
+	cc.Contrast = 0.06
+end
+
+-- Rebuilds the arena for a map. Physics floor/walls/obstacles live here; tiles are rendered by clients.
+function WorldBuilder:BuildArena(map)
+	if self.arena then
+		self.arena:Destroy()
+	end
+	local folder = Instance.new("Folder")
+	folder.Name = "Arena"
+	local E = G.Extent
+	part({ Name = "Floor", Size = Vector3.new(E + 4, 4, E + 4), Position = Vector3.new(0, G.FloorY - 2, 0), Color = rgb(map.floor), Parent = folder })
+	decor({ Size = Vector3.new(E + 16, 3, E + 16), Position = Vector3.new(0, G.FloorY - 4.6, 0), Color = rgb(map.wall):Lerp(Color3.new(0, 0, 0), 0.6), Parent = folder })
+	for _, w in { { 0, E / 2 + 1, E + 4, 2 }, { 0, -E / 2 - 1, E + 4, 2 }, { E / 2 + 1, 0, 2, E + 4 }, { -E / 2 - 1, 0, 2, E + 4 } } do
+		part({ Name = "Wall", Size = Vector3.new(w[3], 8, w[4]), Position = Vector3.new(w[1], G.FloorY + 4, w[2]), Material = Enum.Material.Glass, Transparency = 0.6, Color = rgb(map.wall), CastShadow = false, Parent = folder })
+		decor({ Size = Vector3.new(w[3], 0.5, w[4]), Position = Vector3.new(w[1], G.FloorY + 8.25, w[2]), Material = Enum.Material.Neon, Color = rgb(map.wall), Parent = folder })
+	end
+	for _, r in map.obstacles do
+		local center, size = cellRect(r)
+		local block = part({
+			Name = "Obstacle",
+			Size = Vector3.new(size.X - 0.4, 10, size.Z - 0.4),
+			Position = center + Vector3.new(0, G.FloorY + 5, 0),
+			Material = Enum.Material[map.obstacleMaterial],
+			Color = rgb(map.obstacleColor),
+			Transparency = if map.obstacleMaterial == "Glass" then 0.2 else 0,
+			Parent = folder,
+		})
+		decor({ Size = Vector3.new(block.Size.X + 0.2, 0.4, block.Size.Z + 0.2), Position = block.Position + Vector3.new(0, 5.2, 0), Material = Enum.Material.Neon, Color = rgb(map.accent), Parent = folder })
+	end
+	self:_decor(folder, map, Random.new(#map.id * 7919))
+	folder.Parent = workspace
+	self.arena = folder
+	self:_lighting(map)
+	workspace:SetAttribute("MapId", map.id)
+	workspace:SetAttribute("MapName", map.name)
+end
+
+function WorldBuilder:Init(S)
+	self.S = S
+	self:_buildHub()
+	self:BuildArena(Maps.List[1])
+end
+
+return WorldBuilder
+]]></string>
+          </Properties>
+        </Item>
+      </Item>
+    </Item>
+  </Item>
+  <Item class="SoundService" referent="34">
+    <Properties>
+      <string name="Name">SoundService</string>
+      <bool name="RespectFilteringEnabled">true</bool>
+    </Properties>
+  </Item>
+  <Item class="StarterPlayer" referent="35">
+    <Properties>
+      <string name="Name">StarterPlayer</string>
+      <float name="CameraMaxZoomDistance">120</float>
+      <float name="CharacterWalkSpeed">22</float>
+      <bool name="LoadCharacterAppearance">true</bool>
+    </Properties>
+    <Item class="StarterPlayerScripts" referent="36">
+      <Properties>
+        <string name="Name">StarterPlayerScripts</string>
+      </Properties>
+      <Item class="Folder" referent="37">
+        <Properties>
+          <string name="Name">Client</string>
+        </Properties>
+        <Item class="Folder" referent="38">
+          <Properties>
+            <string name="Name">Controllers</string>
+          </Properties>
+          <Item class="ModuleScript" referent="39">
+            <Properties>
+              <string name="Name">BotRenderer</string>
+              <string name="Source"><![CDATA[-- Draws server bots locally from compact position packets, with smoothing and a squishy bob.
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+local Config = require(ReplicatedStorage.Shared.Config)
+local Net = require(ReplicatedStorage.Shared.Net)
+local State = require(script.Parent.State)
+
+local FLOOR = Config.Grid.FloorY
+local BotRenderer = { bots = {} }
+
+local function newPart(props)
+	local p = Instance.new("Part")
+	p.Anchored = true
+	p.CanCollide = false
+	p.CanQuery = false
+	p.CanTouch = false
+	p.CastShadow = false
+	for k, v in props do
+		p[k] = v
+	end
+	return p
+end
+
+function BotRenderer:_create(slot: number)
+	local model = Instance.new("Model")
+	model.Name = "Bot_" .. slot
+	local body = newPart({ Name = "Body", Shape = Enum.PartType.Ball, Size = Vector3.one * 3.4, Material = Enum.Material.SmoothPlastic, Color = State:ColorOf(slot), Parent = model })
+	local eyes = {}
+	for _, side in { -0.55, 0.55 } do
+		local eye = newPart({ Shape = Enum.PartType.Ball, Size = Vector3.one * 0.9, Color = Color3.new(1, 1, 1), Parent = model })
+		local pupil = newPart({ Shape = Enum.PartType.Ball, Size = Vector3.one * 0.45, Color = Color3.fromRGB(20, 20, 30), Parent = model })
+		table.insert(eyes, { eye, Vector3.new(side, 0.45, -1.45) })
+		table.insert(eyes, { pupil, Vector3.new(side, 0.45, -1.85) })
+	end
+	model.PrimaryPart = body
+	local bb = Instance.new("BillboardGui")
+	bb.Size = UDim2.fromOffset(160, 30)
+	bb.StudsOffset = Vector3.new(0, 3, 0)
+	bb.MaxDistance = 140
+	local t = Instance.new("TextLabel")
+	t.Size = UDim2.fromScale(1, 1)
+	t.BackgroundTransparency = 1
+	t.Font = Enum.Font.FredokaOne
+	t.TextScaled = true
+	t.TextColor3 = State:ColorOf(slot)
+	t.TextStrokeTransparency = 0.25
+	t.Text = State:NameOf(slot)
+	t.Parent = bb
+	bb.Parent = body
+	model.Parent = workspace
+	return { model = model, body = body, eyes = eyes, label = t, pos = nil, target = nil, alive = false, yaw = 0 }
+end
+
+function BotRenderer:_sync()
+	for slot, b in self.bots do
+		local e = State.bySlot[slot]
+		if not e or not e.isBot then
+			b.model:Destroy()
+			self.bots[slot] = nil
+		else
+			b.body.Color = e.color3
+			b.label.TextColor3 = e.color3
+			b.label.Text = e.name
+		end
+	end
+end
+
+function BotRenderer:Start()
+	State.RosterChanged:Connect(function()
+		self:_sync()
+	end)
+	Net.BotPos.OnClientEvent:Connect(function(buf)
+		local count = buffer.readu8(buf, 0)
+		for k = 1, count do
+			local o = 1 + (k - 1) * 10
+			local slot = buffer.readu8(buf, o)
+			local e = State.bySlot[slot]
+			if e and e.isBot then
+				local b = self.bots[slot] or self:_create(slot)
+				self.bots[slot] = b
+				local target = Vector3.new(buffer.readf32(buf, o + 2), FLOOR, buffer.readf32(buf, o + 6))
+				local alive = buffer.readu8(buf, o + 1) == 1
+				if alive and (not b.alive or not b.pos or (target - b.pos).Magnitude > 20) then
+					b.pos = target -- respawn / teleport: snap
+				end
+				b.alive, b.target = alive, target
+				b.model.Parent = if alive then workspace else nil
+			end
+		end
+	end)
+	RunService.RenderStepped:Connect(function(dt)
+		local t = os.clock()
+		for _, b in self.bots do
+			if b.alive and b.pos and b.target then
+				local prev = b.pos
+				b.pos = prev:Lerp(b.target, 1 - math.exp(-12 * dt))
+				local move = b.pos - prev
+				if move.Magnitude > 0.01 then
+					b.yaw = math.atan2(-move.X, -move.Z)
+				end
+				local bob = if move.Magnitude > 0.01 then math.abs(math.sin(t * 12)) * 0.5 else 0
+				local root = CFrame.new(b.pos + Vector3.new(0, 1.7 + bob, 0)) * CFrame.Angles(0, b.yaw, 0)
+				b.body.CFrame = root
+				for _, pair in b.eyes do
+					pair[1].CFrame = root * CFrame.new(pair[2])
+				end
+			end
+		end
+	end)
+end
+
+return BotRenderer
+]]></string>
+            </Properties>
+          </Item>
+          <Item class="ModuleScript" referent="40">
+            <Properties>
+              <string name="Name">CameraController</string>
+              <string name="Source"><![CDATA[-- Top-down follow camera while playing (territory readability), normal Roblox camera in the hub.
+-- Mouse wheel / pinch zooms. Setting "classic" keeps the default camera everywhere.
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local State = require(script.Parent.State)
+
+local LocalPlayer = Players.LocalPlayer
+local CameraController = { height = 62, shake = 0, mode = "top" }
+
+local MIN_H, MAX_H = 34, 95
+
+function CameraController:Shake(amount: number)
+	self.shake = math.max(self.shake, amount)
+end
+
+function CameraController:SetMode(mode: string)
+	self.mode = mode
+end
+
+function CameraController:Start()
+	UserInputService.InputChanged:Connect(function(input, processed)
+		if not processed and input.UserInputType == Enum.UserInputType.MouseWheel then
+			self.height = math.clamp(self.height - input.Position.Z * 5, MIN_H, MAX_H)
+		end
+	end)
+	UserInputService.TouchPinch:Connect(function(_, scale, _, state, processed)
+		if not processed and state == Enum.UserInputState.Change then
+			self.height = math.clamp(self.height / math.clamp(scale, 0.9, 1.1), MIN_H, MAX_H)
+		end
+	end)
+
+	local wasActive = false
+	RunService:BindToRenderStep("ChromaCamera", Enum.RenderPriority.Camera.Value + 1, function(dt)
+		local cam = workspace.CurrentCamera
+		local char = LocalPlayer.Character
+		local root = char and char:FindFirstChild("HumanoidRootPart")
+		local roundState = State:RoundState()
+		local active = self.mode == "top" and State.mySlot ~= nil and roundState == "Playing" and root ~= nil
+		if active then
+			cam.CameraType = Enum.CameraType.Scriptable
+			local focus = root.Position
+			local goal = CFrame.lookAt(focus + Vector3.new(0, self.height, self.height * 0.5), focus)
+			if self.shake > 0.01 then
+				goal *= CFrame.new((math.random() - 0.5) * self.shake, (math.random() - 0.5) * self.shake, 0)
+				self.shake *= math.exp(-8 * dt)
+			end
+			cam.CFrame = if wasActive then cam.CFrame:Lerp(goal, 1 - math.exp(-12 * dt)) else goal
+		elseif wasActive then
+			cam.CameraType = Enum.CameraType.Custom
+			local hum = char and char:FindFirstChildOfClass("Humanoid")
+			if hum then
+				cam.CameraSubject = hum
+			end
+		end
+		wasActive = active
+	end)
+end
+
+return CameraController
+]]></string>
+            </Properties>
+          </Item>
+          <Item class="ModuleScript" referent="41">
+            <Properties>
+              <string name="Name">EffectsController</string>
+              <string name="Source"><![CDATA[-- Juice: capture bursts, splats, pickups, spinning power-ups, reduced-effects mode.
+local CollectionService = game:GetService("CollectionService")
+local Lighting = game:GetService("Lighting")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+local Config = require(ReplicatedStorage.Shared.Config)
+local State = require(script.Parent.State)
+local SoundController = require(script.Parent.SoundController)
+local CameraController = require(script.Parent.CameraController)
+
+local LocalPlayer = Players.LocalPlayer
+local EffectsController = { reduced = false, pool = {}, poolIndex = 0 }
+
+local POOL = 6
+
+function EffectsController:_emitter()
+	self.poolIndex = self.poolIndex % POOL + 1
+	return self.pool[self.poolIndex]
+end
+
+function EffectsController:Burst(pos: Vector3, color: Color3, count: number)
+	if self.reduced then
+		count = math.floor(count / 3)
+	end
+	if count <= 0 then
+		return
+	end
+	local e = self:_emitter()
+	e.part.Position = pos
+	e.emitter.Color = ColorSequence.new(color, color:Lerp(Color3.new(1, 1, 1), 0.6))
+	e.emitter:Emit(count)
+end
+
+function EffectsController:SetReduced(on: boolean)
+	self.reduced = on
+	local bloom = Lighting:FindFirstChildOfClass("BloomEffect")
+	if bloom then
+		bloom.Enabled = not on
+	end
+	for _, inst in CollectionService:GetTagged("CosmeticFX") do
+		if not inst:IsA("Attachment") then
+			inst.Enabled = not on
+		end
+	end
+end
+
+local function myPosition(): Vector3?
+	local char = LocalPlayer.Character
+	local root = char and char:FindFirstChild("HumanoidRootPart")
+	return root and root.Position
+end
+
+function EffectsController:Start()
+	for _ = 1, POOL do
+		local part = Instance.new("Part")
+		part.Anchored = true
+		part.CanCollide = false
+		part.CanQuery = false
+		part.CanTouch = false
+		part.Transparency = 1
+		part.Size = Vector3.one
+		local emitter = Instance.new("ParticleEmitter")
+		emitter.Enabled = false
+		emitter.Rate = 0
+		emitter.Lifetime = NumberRange.new(0.5, 0.9)
+		emitter.Speed = NumberRange.new(14, 26)
+		emitter.SpreadAngle = Vector2.new(180, 180)
+		emitter.Acceleration = Vector3.new(0, -50, 0)
+		emitter.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1.1), NumberSequenceKeypoint.new(1, 0) })
+		emitter.LightEmission = 0.6
+		emitter.Parent = part
+		part.Parent = workspace
+		table.insert(self.pool, { part = part, emitter = emitter })
+	end
+
+	CollectionService:GetInstanceAddedSignal("CosmeticFX"):Connect(function(inst)
+		if self.reduced and not inst:IsA("Attachment") then
+			inst.Enabled = false
+		end
+	end)
+
+	State.MatchEvent:Connect(function(evt)
+		if evt.t == "capture" then
+			local pos = myPosition()
+			if pos then
+				self:Burst(pos, State:ColorOf(State.mySlot or 0), math.clamp(evt.n // 2, 12, 60))
+			end
+			SoundController:Play("Capture", 1, 1 + math.clamp(evt.n / 300, 0, 0.5))
+			CameraController:Shake(math.clamp(evt.n / 60, 0.3, 1.6))
+		elseif evt.t == "elim" then
+			local pos = Vector3.new(evt.x, Config.Grid.FloorY + 2, evt.z)
+			self:Burst(pos, State:ColorOf(evt.victim), 50)
+			if evt.victim == State.mySlot then
+				SoundController:Play("Splat")
+				CameraController:Shake(2.5)
+			elseif evt.killer == State.mySlot then
+				SoundController:Play("Splat", 0.7, 1.3)
+			end
+		elseif evt.t == "powerup" and evt.slot == State.mySlot then
+			SoundController:Play("Pickup", 1, 1.4)
+		elseif evt.t == "roundStart" then
+			SoundController:Play("RoundStart", 1, 0.8)
+		end
+	end)
+
+	RunService.RenderStepped:Connect(function()
+		local t = os.clock()
+		for _, p in CollectionService:GetTagged("Powerup") do
+			if p:IsA("BasePart") then
+				local base = p:GetAttribute("BaseY")
+				if not base then
+					base = p.Position.Y
+					p:SetAttribute("BaseY", base)
+				end
+				p.CFrame = CFrame.new(p.Position.X, base + math.sin(t * 3) * 0.6, p.Position.Z) * CFrame.Angles(0, t * 2, 0)
+			end
+		end
+	end)
+end
+
+return EffectsController
+]]></string>
+            </Properties>
+          </Item>
+          <Item class="ModuleScript" referent="42">
+            <Properties>
+              <string name="Name">GridRenderer</string>
+              <string name="Source"><![CDATA[-- Renders the territory grid locally: one cheap non-colliding tile per cell, recoloured on deltas.
+-- Newly claimed tiles do a short "pop" wave (moved in bulk, skipped with Reduced Effects).
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+local Config = require(ReplicatedStorage.Shared.Config)
+local Maps = require(ReplicatedStorage.Shared.Maps)
+local State = require(script.Parent.State)
+
+local G = Config.Grid
+local GridRenderer = { tiles = {}, base = {}, pops = {}, reducedFx = false }
+
+local BLACK, WHITE = Color3.new(0, 0, 0), Color3.new(1, 1, 1)
+local POP_TIME, POP_HEIGHT, MAX_POPS = 0.35, 0.9, 260
+
+local function rgb(t)
+	return Color3.fromRGB(t[1], t[2], t[3])
+end
+
+function GridRenderer:_build()
+	local folder = Instance.new("Folder")
+	folder.Name = "ChromaTiles"
+	local size = Vector3.new(G.TileSize - 0.3, 0.2, G.TileSize - 0.3)
+	for z = 1, G.Size do
+		for x = 1, G.Size do
+			local p = Instance.new("Part")
+			p.Anchored = true
+			p.CanCollide = false
+			p.CanQuery = false
+			p.CanTouch = false
+			p.CastShadow = false
+			p.Material = Enum.Material.SmoothPlastic
+			p.Size = size
+			local cf = CFrame.new(G.OriginX + (x - 0.5) * G.TileSize, G.FloorY + 0.1, G.OriginZ + (z - 0.5) * G.TileSize)
+			p.CFrame = cf
+			p.Parent = folder
+			local i = (z - 1) * G.Size + x
+			self.tiles[i] = p
+			self.base[i] = cf
+		end
+	end
+	folder.Parent = workspace
+	self.folder = folder
+end
+
+function GridRenderer:_paint(i: number)
+	local grid, part = State.grid, self.tiles[i]
+	local o, t = grid.owner[i], grid.trail[i]
+	if o == -1 then
+		part.Transparency = 1
+		return
+	end
+	part.Transparency = 0
+	local x, z = grid:coords(i)
+	local alt = (x + z) % 2 == 0
+	if t ~= 0 then
+		part.Material = Enum.Material.Neon
+		part.Color = State:ColorOf(t):Lerp(WHITE, 0.25)
+	elseif o > 0 then
+		part.Material = Enum.Material.SmoothPlastic
+		local c = State:ColorOf(o)
+		part.Color = if alt then c else c:Lerp(BLACK, 0.12)
+	else
+		part.Material = Enum.Material.SmoothPlastic
+		part.Color = if alt then self.tileA else self.tileB
+	end
+end
+
+function GridRenderer:_paintAll()
+	if not State.grid then
+		return
+	end
+	for i = 1, State.grid.n do
+		self:_paint(i)
+	end
+end
+
+function GridRenderer:_pop(i: number)
+	if self.reducedFx or #self.pops >= MAX_POPS then
+		return
+	end
+	table.insert(self.pops, { i = i, t0 = os.clock() })
+end
+
+function GridRenderer:_stepPops()
+	local n = #self.pops
+	if n == 0 then
+		return
+	end
+	local now = os.clock()
+	local parts, cfs, keep = table.create(n), table.create(n), {}
+	for _, e in self.pops do
+		local a = (now - e.t0) / POP_TIME
+		local base = self.base[e.i]
+		if a >= 1 then
+			parts[#parts + 1] = self.tiles[e.i]
+			cfs[#cfs + 1] = base
+		else
+			parts[#parts + 1] = self.tiles[e.i]
+			cfs[#cfs + 1] = base + Vector3.new(0, math.sin(a * math.pi) * POP_HEIGHT, 0)
+			keep[#keep + 1] = e
+		end
+	end
+	workspace:BulkMoveTo(parts, cfs, Enum.BulkMoveMode.FireCFrameChanged)
+	self.pops = keep
+end
+
+function GridRenderer:SetReducedFx(on: boolean)
+	self.reducedFx = on
+end
+
+function GridRenderer:Start()
+	self:_build()
+	local function applyMap(mapId)
+		local map = Maps.get(mapId) or Maps.List[1]
+		self.tileA, self.tileB = rgb(map.tileA), rgb(map.tileB)
+	end
+	applyMap(Maps.List[1].id)
+	State.GridReset:Connect(function(mapId)
+		applyMap(mapId)
+		self:_paintAll()
+	end)
+	State.RosterChanged:Connect(function()
+		self:_paintAll()
+	end)
+	State.GridChanged:Connect(function(changed)
+		local grid = State.grid
+		for _, i in changed do
+			local wasTrail = self.tiles[i].Material == Enum.Material.Neon
+			self:_paint(i)
+			-- Capture wave: trail turned into territory, or a big batch of new territory.
+			if (wasTrail or #changed > 40) and grid.owner[i] > 0 and grid.trail[i] == 0 then
+				self:_pop(i)
+			end
+		end
+	end)
+	RunService.RenderStepped:Connect(function()
+		self:_stepPops()
+	end)
+end
+
+return GridRenderer
+]]></string>
+            </Properties>
+          </Item>
+          <Item class="ModuleScript" referent="43">
+            <Properties>
+              <string name="Name">SoundController</string>
+              <string name="Source"><![CDATA[-- Local SFX/music with volume from saved settings. IDs come from Config.Audio.
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local SoundService = game:GetService("SoundService")
+
+local Config = require(ReplicatedStorage.Shared.Config)
+
+local SoundController = { sfx = 0.8, music = 0.5, cache = {} }
+
+function SoundController:Play(name: string, scale: number?, pitch: number?)
+	local id = Config.Audio[name]
+	if not id or id == "" or self.sfx <= 0 then
+		return
+	end
+	local s = self.cache[name]
+	if not s then
+		s = Instance.new("Sound")
+		s.Name = "SFX_" .. name
+		s.SoundId = id
+		s.Parent = SoundService
+		self.cache[name] = s
+	end
+	s.Volume = self.sfx * 0.6 * (scale or 1)
+	s.PlaybackSpeed = pitch or 1
+	SoundService:PlayLocalSound(s)
+end
+
+function SoundController:SetVolumes(sfx: number, music: number)
+	self.sfx, self.music = sfx, music
+	if self.musicSound then
+		self.musicSound.Volume = music * 0.35
+	end
+end
+
+function SoundController:Start()
+	if Config.Audio.Music ~= "" then
+		local m = Instance.new("Sound")
+		m.Name = "Music"
+		m.SoundId = Config.Audio.Music
+		m.Looped = true
+		m.Volume = self.music * 0.35
+		m.Parent = SoundService
+		m:Play()
+		self.musicSound = m
+	end
+end
+
+return SoundController
+]]></string>
+            </Properties>
+          </Item>
+          <Item class="ModuleScript" referent="44">
+            <Properties>
+              <string name="Name">State</string>
+              <string name="Source"><![CDATA[-- Client-side mirror of server state + signals. The client never decides outcomes.
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Config = require(ReplicatedStorage.Shared.Config)
+local Grid = require(ReplicatedStorage.Shared.Grid)
+local GridCodec = require(ReplicatedStorage.Shared.GridCodec)
+local Signal = require(ReplicatedStorage.Shared.Signal)
+local Net = require(ReplicatedStorage.Shared.Net)
+
+local LocalPlayer = Players.LocalPlayer
+
+local State = {
+	profile = nil,
+	passes = {},
+	roster = {},
+	bySlot = {},
+	mySlot = nil,
+	mapId = nil,
+	grid = nil,
+	ProfileChanged = Signal.new(),
+	RosterChanged = Signal.new(),
+	GridReset = Signal.new(),
+	GridChanged = Signal.new(),
+	MatchEvent = Signal.new(),
+	Notify = Signal.new(),
+}
+
+local GRAY = Color3.fromRGB(120, 120, 140)
+
+function State:ColorOf(slot: number): Color3
+	local e = self.bySlot[slot]
+	return e and e.color3 or GRAY
+end
+
+function State:NameOf(slot: number): string
+	local e = self.bySlot[slot]
+	return e and e.name or "?"
+end
+
+function State:RoundState(): (string, number)
+	return workspace:GetAttribute("RoundState") or "Intermission", workspace:GetAttribute("RoundEndsAt") or 0
+end
+
+function State:Request(action: string, arg: any)
+	local ok, res = pcall(Net.Request.InvokeServer, Net.Request, action, arg)
+	if not ok or type(res) ~= "table" then
+		return { ok = false, err = "network" }
+	end
+	return res
+end
+
+function State:Event(kind: string, arg: any)
+	Net.ClientEvent:FireServer(kind, arg)
+end
+
+function State:Start()
+	Net.Profile.OnClientEvent:Connect(function(data, passes)
+		self.profile = data
+		self.passes = passes or {}
+		self.ProfileChanged:Fire(data)
+	end)
+	Net.Roster.OnClientEvent:Connect(function(list)
+		self.roster, self.bySlot, self.mySlot = list, {}, nil
+		for _, e in list do
+			e.color3 = Color3.fromRGB(e.color[1], e.color[2], e.color[3])
+			self.bySlot[e.slot] = e
+			if not e.isBot and e.userId == LocalPlayer.UserId then
+				self.mySlot = e.slot
+			end
+		end
+		self.RosterChanged:Fire()
+	end)
+	Net.GridSnapshot.OnClientEvent:Connect(function(mapId, buf)
+		local g = Grid.new(Config.Grid.Size)
+		GridCodec.applySnapshot(g, buf)
+		g:takeDirty()
+		self.grid, self.mapId = g, mapId
+		self.GridReset:Fire(mapId)
+	end)
+	Net.GridDelta.OnClientEvent:Connect(function(buf)
+		if self.grid then
+			local changed = GridCodec.applyDelta(self.grid, buf)
+			self.grid:takeDirty()
+			self.GridChanged:Fire(changed)
+		end
+	end)
+	Net.Match.OnClientEvent:Connect(function(evt)
+		self.MatchEvent:Fire(evt)
+	end)
+	Net.Notify.OnClientEvent:Connect(function(text, style)
+		self.Notify:Fire(text, style)
+	end)
+end
+
+return State
+]]></string>
+            </Properties>
+          </Item>
+        </Item>
+        <Item class="LocalScript" referent="45">
+          <Properties>
+            <string name="Name">Main</string>
+            <string name="Source"><![CDATA[-- Client bootstrap.
+local ContextActionService = game:GetService("ContextActionService")
+
+local Controllers = script.Parent.Controllers
+local UI = script.Parent.UI
+
+local State = require(Controllers.State)
+local GridRenderer = require(Controllers.GridRenderer)
+local BotRenderer = require(Controllers.BotRenderer)
+local CameraController = require(Controllers.CameraController)
+local SoundController = require(Controllers.SoundController)
+local EffectsController = require(Controllers.EffectsController)
+
+local Kit = require(UI.Kit)
+local HUD = require(UI.HUD)
+local Shop = require(UI.Shop)
+local Quests = require(UI.Quests)
+local Results = require(UI.Results)
+local Settings = require(UI.Settings)
+local Onboarding = require(UI.Onboarding)
+
+State:Start()
+GridRenderer:Start()
+BotRenderer:Start()
+CameraController:Start()
+SoundController:Start()
+EffectsController:Start()
+
+local gui = Kit.root("ChromaUI")
+HUD:Start(gui, Kit.openModal)
+Shop:Start(gui)
+Quests:Start(gui)
+Results:Start(gui)
+Settings:Start(gui)
+Onboarding:Start(gui)
+
+State.ProfileChanged:Connect(function(data)
+	local s = data.settings
+	SoundController:SetVolumes(s.sfx, s.music)
+	CameraController:SetMode(s.camera)
+	EffectsController:SetReduced(s.reducedFx)
+	GridRenderer:SetReducedFx(s.reducedFx)
+end)
+
+-- Keyboard / gamepad shortcuts.
+local function bind(name: string, modal: string, ...)
+	ContextActionService:BindAction(name, function(_, state)
+		if state == Enum.UserInputState.Begin then
+			Kit.openModal(modal)
+		end
+		return Enum.ContextActionResult.Sink
+	end, false, ...)
+end
+bind("ChromaShop", "Shop", Enum.KeyCode.B, Enum.KeyCode.ButtonY)
+bind("ChromaQuests", "Quests", Enum.KeyCode.Q, Enum.KeyCode.ButtonX)
+ContextActionService:BindAction("ChromaClose", function(_, state)
+	if Kit.currentModal() then
+		if state == Enum.UserInputState.Begin then
+			Kit.closeModal()
+		end
+		return Enum.ContextActionResult.Sink
+	end
+	return Enum.ContextActionResult.Pass
+end, false, Enum.KeyCode.ButtonB)
+
+-- Ask for state only once every listener is connected.
+State:Event("ready")
+]]></string>
+          </Properties>
+        </Item>
+        <Item class="Folder" referent="46">
+          <Properties>
+            <string name="Name">UI</string>
+          </Properties>
+          <Item class="ModuleScript" referent="47">
+            <Properties>
+              <string name="Name">HUD</string>
+              <string name="Source"><![CDATA[-- In-game HUD: round timer, coins/level, live turf leaderboard, menu, big toasts, kill feed, power-up chips.
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local SocialService = game:GetService("SocialService")
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Progression = require(ReplicatedStorage.Shared.Progression)
+local Maps = require(ReplicatedStorage.Shared.Maps)
+
+local Kit = require(script.Parent.Kit)
+local State = require(script.Parent.Parent.Controllers.State)
+
+local T = Kit.Theme
+local LocalPlayer = Players.LocalPlayer
+local HUD = {}
+
+local ROWS = 6
+
+function HUD:_top(gui)
+	local pill = Kit.new("Frame", {
+		Size = UDim2.fromOffset(380, 58),
+		Position = UDim2.new(0.5, 0, 0, 10),
+		AnchorPoint = Vector2.new(0.5, 0),
+		BackgroundColor3 = T.Panel,
+		BackgroundTransparency = 0.1,
+		Parent = gui,
+	}, { Kit.corner(29), Kit.stroke(T.Sky, 2.5, 0.25) })
+	self.timer = Kit.label({ Size = UDim2.new(1, -24, 0.62, 0), Position = UDim2.fromOffset(12, 4), MaxText = 32, Parent = pill })
+	self.mapLabel = Kit.label({ Size = UDim2.new(1, -24, 0.34, 0), Position = UDim2.new(0, 12, 0.62, -2), Font = T.Bold, TextColor3 = T.Sub, MaxText = 15, Parent = pill })
+end
+
+function HUD:_wallet(gui)
+	local box = Kit.new("Frame", { Size = UDim2.fromOffset(250, 100), Position = UDim2.fromOffset(12, 10), BackgroundTransparency = 1, Parent = gui })
+	local coins = Kit.new("Frame", { Size = UDim2.fromOffset(200, 44), BackgroundColor3 = T.Panel, BackgroundTransparency = 0.1, Parent = box }, { Kit.corner(22), Kit.stroke(T.Gold, 2, 0.3) })
+	Kit.new("Frame", { Size = UDim2.fromOffset(30, 30), Position = UDim2.fromOffset(8, 7), BackgroundColor3 = T.Gold, Parent = coins }, { Kit.corner(15), Kit.stroke(Color3.fromRGB(180, 120, 20), 2, 0) })
+	self.coins = Kit.label({ Size = UDim2.new(1, -54, 1, -10), Position = UDim2.fromOffset(46, 5), TextXAlignment = Enum.TextXAlignment.Left, Text = "0", MaxText = 26, Parent = coins })
+
+	local lvl = Kit.new("Frame", { Size = UDim2.fromOffset(240, 44), Position = UDim2.fromOffset(0, 52), BackgroundColor3 = T.Panel, BackgroundTransparency = 0.1, Parent = box }, { Kit.corner(22), Kit.stroke(T.Mint, 2, 0.3) })
+	local badge = Kit.new("Frame", { Size = UDim2.fromOffset(36, 36), Position = UDim2.fromOffset(4, 4), BackgroundColor3 = T.Mint, Parent = lvl }, { Kit.corner(18) })
+	self.level = Kit.label({ Size = UDim2.fromScale(0.8, 0.8), Position = UDim2.fromScale(0.1, 0.1), TextColor3 = Color3.fromRGB(20, 40, 40), Text = "1", Parent = badge })
+	local barBg = Kit.new("Frame", { Size = UDim2.new(1, -60, 0, 14), Position = UDim2.new(0, 48, 0.5, -7), BackgroundColor3 = T.Bg, Parent = lvl }, { Kit.corner(7) })
+	self.xpBar = Kit.new("Frame", { Size = UDim2.fromScale(0, 1), BackgroundColor3 = T.Mint, Parent = barBg }, { Kit.corner(7), Kit.gradient(T.Mint, T.Sky, 0) })
+end
+
+function HUD:_board(gui)
+	local board = Kit.new("Frame", {
+		Size = UDim2.fromOffset(250, 40 + ROWS * 34),
+		Position = UDim2.new(1, -12, 0, 10),
+		AnchorPoint = Vector2.new(1, 0),
+		BackgroundColor3 = T.Panel,
+		BackgroundTransparency = 0.15,
+		Parent = gui,
+	}, { Kit.corner(16), Kit.stroke(T.Pink, 2, 0.35) })
+	Kit.label({ Text = "TURF", Size = UDim2.new(1, -20, 0, 28), Position = UDim2.fromOffset(10, 6), TextXAlignment = Enum.TextXAlignment.Left, MaxText = 22, Parent = board })
+	self.rows = {}
+	for k = 1, ROWS do
+		local row = Kit.new("Frame", { Size = UDim2.new(1, -16, 0, 30), Position = UDim2.fromOffset(8, 36 + (k - 1) * 34), BackgroundColor3 = T.Bg, BackgroundTransparency = 0.3, Visible = false, Parent = board }, { Kit.corner(8) })
+		local fill = Kit.new("Frame", { Size = UDim2.fromScale(0, 1), BackgroundTransparency = 0.45, Parent = row }, { Kit.corner(8) })
+		local name = Kit.label({ Size = UDim2.new(0.7, -8, 1, -6), Position = UDim2.fromOffset(8, 3), Font = T.Bold, TextXAlignment = Enum.TextXAlignment.Left, MaxText = 16, Parent = row })
+		local pct = Kit.label({ Size = UDim2.new(0.3, -8, 1, -6), Position = UDim2.new(0.7, 0, 0, 3), TextXAlignment = Enum.TextXAlignment.Right, MaxText = 17, Parent = row })
+		self.rows[k] = { row = row, fill = fill, name = name, pct = pct }
+	end
+	self.board = board
+	self.feed = Kit.new("Frame", { Size = UDim2.fromOffset(300, 120), Position = UDim2.new(1, -12, 0, 60 + ROWS * 34), AnchorPoint = Vector2.new(1, 0), BackgroundTransparency = 1, Parent = gui }, { Kit.list(4, false, Enum.HorizontalAlignment.Right) })
+end
+
+function HUD:_menu(gui, open)
+	local bar = Kit.new("Frame", { Size = UDim2.fromOffset(96, 330), Position = UDim2.new(0, 12, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), BackgroundTransparency = 1, Parent = gui }, { Kit.list(10) })
+	local defs = {
+		{ "SHOP", T.Gold, "Shop" },
+		{ "QUESTS", T.Mint, "Quests" },
+		{ "INVITE", T.Sky, nil },
+		{ "SETTINGS", T.PanelLight, "Settings" },
+	}
+	for k, d in defs do
+		local btn = Kit.button({
+			text = d[1],
+			color = d[2],
+			size = UDim2.fromOffset(96, 66),
+			textColor = if d[1] == "SETTINGS" then T.Text else nil,
+			maxText = 18,
+			layoutOrder = k,
+			parent = bar,
+			onClick = function()
+				if d[3] then
+					open(d[3])
+				else
+					self:_invite()
+				end
+			end,
+		})
+		if d[1] == "QUESTS" then
+			self.questDot = Kit.new("Frame", { Size = UDim2.fromOffset(18, 18), Position = UDim2.new(1, -10, 0, -6), BackgroundColor3 = T.Red, Visible = false, Parent = btn }, { Kit.corner(9), Kit.stroke(Color3.new(1, 1, 1), 2, 0) })
+		end
+	end
+end
+
+function HUD:_invite()
+	State:Event("invite")
+	local ok, can = pcall(SocialService.CanSendGameInviteAsync, SocialService, LocalPlayer)
+	if ok and can then
+		pcall(SocialService.PromptGameInvite, SocialService, LocalPlayer)
+	else
+		State.Notify:Fire("Invites aren't available on this device right now.", "info")
+	end
+end
+
+function HUD:_center(gui)
+	self.big = Kit.label({ Size = UDim2.fromOffset(600, 90), Position = UDim2.fromScale(0.5, 0.3), AnchorPoint = Vector2.new(0.5, 0.5), TextTransparency = 1, TextStrokeTransparency = 1, MaxText = 72, Parent = gui })
+	self.bigScale = Kit.new("UIScale", { Parent = self.big })
+	self.overlay = Kit.new("Frame", { Size = UDim2.fromOffset(520, 130), Position = UDim2.fromScale(0.5, 0.55), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = T.Bg, BackgroundTransparency = 0.15, Visible = false, Parent = gui }, { Kit.corner(20), Kit.stroke(T.Red, 3, 0.1) })
+	self.overlayTitle = Kit.label({ Size = UDim2.new(1, -20, 0.55, 0), Position = UDim2.fromOffset(10, 8), TextColor3 = T.Red, MaxText = 40, Parent = self.overlay })
+	self.overlaySub = Kit.label({ Size = UDim2.new(1, -20, 0.35, 0), Position = UDim2.new(0, 10, 0.58, 0), Font = T.Bold, TextColor3 = T.Sub, MaxText = 22, Parent = self.overlay })
+	self.chips = Kit.new("Frame", { Size = UDim2.fromOffset(400, 40), Position = UDim2.new(0.5, 0, 1, -16), AnchorPoint = Vector2.new(0.5, 1), BackgroundTransparency = 1, Parent = gui }, { Kit.list(8, true) })
+end
+
+function HUD:BigToast(text: string, color: Color3?)
+	local l = self.big
+	l.Text = text
+	l.TextColor3 = color or T.Text
+	l.TextTransparency, l.TextStrokeTransparency = 0, 0.2
+	self.bigScale.Scale = 0.5
+	Kit.tween(self.bigScale, 0.25, { Scale = 1 }, Enum.EasingStyle.Back)
+	self.bigToken = (self.bigToken or 0) + 1
+	local token = self.bigToken
+	task.delay(1.1, function()
+		if self.bigToken == token then
+			Kit.tween(l, 0.4, { TextTransparency = 1, TextStrokeTransparency = 1 })
+		end
+	end)
+end
+
+function HUD:Feed(text: string, color: Color3?)
+	local l = Kit.label({ Size = UDim2.fromOffset(300, 24), Text = text, Font = T.Bold, TextColor3 = color or T.Text, TextStrokeTransparency = 0.3, TextXAlignment = Enum.TextXAlignment.Right, MaxText = 17, Parent = self.feed })
+	local items = {}
+	for _, c in self.feed:GetChildren() do
+		if c:IsA("TextLabel") then
+			table.insert(items, c)
+		end
+	end
+	if #items > 4 then
+		items[1]:Destroy()
+	end
+	task.delay(4, function()
+		if l.Parent then
+			Kit.tween(l, 0.5, { TextTransparency = 1, TextStrokeTransparency = 1 }).Completed:Wait()
+			l:Destroy()
+		end
+	end)
+end
+
+function HUD:Chip(text: string, color: Color3, seconds: number)
+	local chip = Kit.new("Frame", { Size = UDim2.fromOffset(130, 36), BackgroundColor3 = color, Parent = self.chips }, { Kit.corner(18), Kit.stroke(Color3.new(0, 0, 0), 2, 0.5) })
+	local l = Kit.label({ Size = UDim2.new(1, -12, 1, -8), Position = UDim2.fromOffset(6, 4), TextColor3 = Color3.fromRGB(20, 20, 40), MaxText = 20, Parent = chip })
+	local t0 = os.clock()
+	task.spawn(function()
+		while chip.Parent and os.clock() - t0 < seconds do
+			l.Text = string.format("%s %.0fs", text, math.ceil(seconds - (os.clock() - t0)))
+			task.wait(0.2)
+		end
+		chip:Destroy()
+	end)
+end
+
+function HUD:_refreshProfile(data)
+	self.coins.Text = Kit.comma(data.coins)
+	self.level.Text = tostring(data.level)
+	Kit.tween(self.xpBar, 0.3, { Size = UDim2.fromScale(math.clamp(data.xp / Progression.xpToNext(data.level), 0, 1), 1) })
+	local today = Progression.dayNumber(os.time())
+	local claimable = data.daily.lastDay < today
+	for _, q in data.quests.list do
+		local def = Progression.quest(q.id)
+		if def and not q.claimed and q.progress >= def.goal then
+			claimable = true
+		end
+	end
+	self.questDot.Visible = claimable
+end
+
+function HUD:_refreshBoard()
+	local grid = State.grid
+	local roundState = State:RoundState()
+	if not grid or roundState ~= "Playing" then
+		self.board.Visible = false
+		return
+	end
+	self.board.Visible = true
+	local entries = {}
+	for _, e in State.roster do
+		table.insert(entries, { e = e, pct = grid:percentOf(e.slot) })
+	end
+	table.sort(entries, function(a, b)
+		return a.pct > b.pct
+	end)
+	-- Always show the local player, even outside the top rows.
+	local shown = {}
+	for k = 1, math.min(ROWS, #entries) do
+		shown[k] = entries[k]
+	end
+	local mine
+	for k, entry in entries do
+		if entry.e.slot == State.mySlot then
+			mine = k
+		end
+	end
+	if mine and mine > ROWS then
+		shown[ROWS] = entries[mine]
+	end
+	for k, r in self.rows do
+		local entry = shown[k]
+		r.row.Visible = entry ~= nil
+		if entry then
+			local rank = if entry.e.slot == State.mySlot and mine then mine else k
+			r.name.Text = rank .. ". " .. entry.e.name
+			r.name.TextColor3 = if entry.e.slot == State.mySlot then T.Gold else T.Text
+			r.pct.Text = string.format("%.1f%%", entry.pct)
+			r.fill.BackgroundColor3 = entry.e.color3
+			r.fill.Size = UDim2.fromScale(math.clamp(entry.pct / 50, 0.02, 1), 1)
+		end
+	end
+end
+
+function HUD:Start(gui, open)
+	self:_top(gui)
+	self:_wallet(gui)
+	self:_board(gui)
+	self:_menu(gui, open)
+	self:_center(gui)
+
+	State.ProfileChanged:Connect(function(data)
+		self:_refreshProfile(data)
+	end)
+
+	State.MatchEvent:Connect(function(evt)
+		if evt.t == "capture" then
+			self:BigToast("+" .. evt.n .. " TILES", State:ColorOf(State.mySlot or 0):Lerp(Color3.new(1, 1, 1), 0.2))
+		elseif evt.t == "elim" then
+			local victim, killer = State:NameOf(evt.victim), evt.killer ~= 0 and State:NameOf(evt.killer)
+			local vc = State:ColorOf(evt.victim)
+			if evt.victim == State.mySlot then
+				self.overlay.Visible = true
+				self.overlayTitle.Text = if killer then "CUT BY " .. string.upper(killer) .. "!" else "SPLAT!"
+				self.overlaySub.Text = if evt.reason == "self" then "You crossed your own trail. Respawning..." elseif evt.reason == "enclosed" then "Your trail got looped in. Respawning..." elseif evt.reason == "overrun" then "Your turf was swallowed. Respawning..." else "Respawning..."
+			elseif evt.killer == State.mySlot then
+				self:BigToast("SNAP! " .. victim, T.Gold)
+			end
+			if killer then
+				self:Feed(killer .. "  cut  " .. victim, vc)
+			end
+		elseif evt.t == "spawn" and evt.slot == State.mySlot then
+			self.overlay.Visible = false
+		elseif evt.t == "powerup" and evt.slot == State.mySlot then
+			if evt.kind == "Dash" then
+				self:Chip("DASH", T.Gold, evt.duration)
+			elseif evt.kind == "Shield" then
+				self:Chip("SHIELD", T.Sky, evt.duration)
+			else
+				self:BigToast("INK BOMB!", T.Pink)
+			end
+		elseif evt.t == "roundStart" then
+			self.overlay.Visible = false
+			local map = Maps.get(evt.map)
+			self:BigToast(if map then string.upper(map.name) else "GO!", T.Mint)
+		end
+	end)
+
+	local acc = 0
+	RunService.Heartbeat:Connect(function(dt)
+		acc += dt
+		if acc < 0.25 then
+			return
+		end
+		acc = 0
+		local roundState, endsAt = State:RoundState()
+		local left = endsAt - workspace:GetServerTimeNow()
+		if roundState == "Playing" then
+			self.timer.Text = Kit.formatTime(left)
+			self.timer.TextColor3 = if left <= 15 then T.Red else T.Text
+			self.mapLabel.Text = string.upper(workspace:GetAttribute("MapName") or "")
+		else
+			self.timer.Text = "NEXT ROUND " .. Kit.formatTime(left)
+			self.timer.TextColor3 = T.Mint
+			self.mapLabel.Text = "HUB - GET READY"
+			self.overlay.Visible = false
+		end
+		self:_refreshBoard()
+	end)
+end
+
+return HUD
+]]></string>
+            </Properties>
+          </Item>
+          <Item class="ModuleScript" referent="48">
+            <Properties>
+              <string name="Name">Kit</string>
+              <string name="Source"><![CDATA[-- Tiny UI toolkit: theme, instance builder, styled buttons/panels, single-modal router, responsive scale.
+local GuiService = game:GetService("GuiService")
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+
+local SoundController = require(script.Parent.Parent.Controllers.SoundController)
+
+local Kit = {}
+
+Kit.Theme = {
+	Bg = Color3.fromRGB(22, 18, 44),
+	Panel = Color3.fromRGB(34, 29, 66),
+	PanelLight = Color3.fromRGB(50, 43, 92),
+	Text = Color3.fromRGB(246, 244, 255),
+	Sub = Color3.fromRGB(184, 178, 226),
+	Mint = Color3.fromRGB(62, 240, 178),
+	Sky = Color3.fromRGB(72, 170, 255),
+	Pink = Color3.fromRGB(255, 92, 200),
+	Gold = Color3.fromRGB(255, 202, 64),
+	Red = Color3.fromRGB(255, 92, 92),
+	Disabled = Color3.fromRGB(90, 86, 120),
+	Title = Enum.Font.FredokaOne,
+	Body = Enum.Font.GothamMedium,
+	Bold = Enum.Font.GothamBold,
+}
+local T = Kit.Theme
+
+Kit.ROBUX = utf8.char(0xE002) -- Roblox's built-in Robux glyph
+
+function Kit.new(class: string, props, children)
+	local inst = Instance.new(class)
+	local parent = props and props.Parent
+	for k, v in props or {} do
+		if k ~= "Parent" then
+			inst[k] = v
+		end
+	end
+	for _, c in children or {} do
+		c.Parent = inst
+	end
+	if parent then
+		inst.Parent = parent
+	end
+	return inst
+end
+
+function Kit.corner(r: number?)
+	return Kit.new("UICorner", { CornerRadius = UDim.new(0, r or 14) })
+end
+
+function Kit.stroke(color: Color3?, thickness: number?, transparency: number?)
+	return Kit.new("UIStroke", {
+		Color = color or Color3.new(0, 0, 0),
+		Thickness = thickness or 2,
+		Transparency = transparency or 0.3,
+		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+	})
+end
+
+function Kit.pad(px: number)
+	local u = UDim.new(0, px)
+	return Kit.new("UIPadding", { PaddingTop = u, PaddingBottom = u, PaddingLeft = u, PaddingRight = u })
+end
+
+function Kit.gradient(a: Color3, b: Color3, rotation: number?)
+	return Kit.new("UIGradient", { Color = ColorSequence.new(a, b), Rotation = rotation or 90 })
+end
+
+function Kit.list(padding: number?, horizontal: boolean?, align)
+	return Kit.new("UIListLayout", {
+		Padding = UDim.new(0, padding or 8),
+		FillDirection = if horizontal then Enum.FillDirection.Horizontal else Enum.FillDirection.Vertical,
+		SortOrder = Enum.SortOrder.LayoutOrder,
+		HorizontalAlignment = align or Enum.HorizontalAlignment.Center,
+		VerticalAlignment = Enum.VerticalAlignment.Center,
+	})
+end
+
+function Kit.label(props)
+	local defaults = {
+		BackgroundTransparency = 1,
+		Font = T.Title,
+		TextColor3 = T.Text,
+		TextScaled = true,
+		Text = "",
+	}
+	for k, v in props do
+		if k ~= "MaxText" then
+			defaults[k] = v
+		end
+	end
+	local l = Kit.new("TextLabel", defaults)
+	Kit.new("UITextSizeConstraint", { MaxTextSize = props.MaxText or 34, MinTextSize = 9, Parent = l })
+	return l
+end
+
+function Kit.tween(inst, time: number, goal, style)
+	local tw = TweenService:Create(inst, TweenInfo.new(time, style or Enum.EasingStyle.Quad, Enum.EasingDirection.Out), goal)
+	tw:Play()
+	return tw
+end
+
+-- Styled button. opts: text, color, size, position, anchor, onClick, textColor, maxText, parent, layoutOrder
+function Kit.button(opts)
+	local scale = Kit.new("UIScale", { Scale = 1 })
+	local btn = Kit.new("TextButton", {
+		Name = opts.name or "Button",
+		AutoButtonColor = false,
+		BackgroundColor3 = opts.color or T.Mint,
+		Size = opts.size or UDim2.fromOffset(160, 52),
+		Position = opts.position or UDim2.new(),
+		AnchorPoint = opts.anchor or Vector2.zero,
+		Text = "",
+		LayoutOrder = opts.layoutOrder or 0,
+		Parent = opts.parent,
+	}, {
+		Kit.corner(opts.radius or 14),
+		Kit.stroke(Color3.new(0, 0, 0), 2.5, 0.55),
+		Kit.gradient(Color3.new(1, 1, 1), Color3.fromRGB(200, 200, 215)),
+		scale,
+	})
+	local label = Kit.label({
+		Name = "Label",
+		Size = UDim2.new(1, -16, 1, -10),
+		Position = UDim2.fromOffset(8, 5),
+		Text = opts.text or "",
+		TextColor3 = opts.textColor or Color3.fromRGB(26, 22, 50),
+		MaxText = opts.maxText or 26,
+		Parent = btn,
+	})
+	btn.MouseEnter:Connect(function()
+		Kit.tween(scale, 0.12, { Scale = 1.05 })
+	end)
+	btn.MouseLeave:Connect(function()
+		Kit.tween(scale, 0.12, { Scale = 1 })
+	end)
+	btn.MouseButton1Down:Connect(function()
+		Kit.tween(scale, 0.06, { Scale = 0.94 })
+	end)
+	btn.MouseButton1Up:Connect(function()
+		Kit.tween(scale, 0.1, { Scale = 1.05 })
+	end)
+	btn.Activated:Connect(function()
+		if btn:GetAttribute("Disabled") then
+			return
+		end
+		SoundController:Play("Click", 0.5, 1.2)
+		if opts.onClick then
+			opts.onClick()
+		end
+	end)
+	return btn, label
+end
+
+function Kit.setEnabled(btn, enabled: boolean, color: Color3?)
+	btn:SetAttribute("Disabled", not enabled)
+	btn.BackgroundColor3 = if enabled then (color or btn.BackgroundColor3) else T.Disabled
+end
+
+-- Root ScreenGui with responsive UIScale (designed at 1280x720, clamped for phones/4K).
+function Kit.root(name: string, order: number?)
+	local gui = Kit.new("ScreenGui", {
+		Name = name,
+		ResetOnSpawn = false,
+		IgnoreGuiInset = false,
+		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+		DisplayOrder = order or 0,
+		Parent = Players.LocalPlayer:WaitForChild("PlayerGui"),
+	})
+	local scale = Kit.new("UIScale", { Parent = gui })
+	local function fit()
+		local cam = workspace.CurrentCamera
+		local vp = cam and cam.ViewportSize or Vector2.new(1280, 720)
+		scale.Scale = math.clamp(math.min(vp.X / 1150, vp.Y / 640), 0.6, 1.35)
+	end
+	fit()
+	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(fit)
+	return gui
+end
+
+-- Modal window with title and close button. Returns frame, content.
+function Kit.panel(parent, title: string, size: UDim2)
+	local frame = Kit.new("Frame", {
+		Name = title,
+		Size = size,
+		Position = UDim2.fromScale(0.5, 0.5),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		BackgroundColor3 = T.Panel,
+		Visible = false,
+		Parent = parent,
+	}, {
+		Kit.corner(20),
+		Kit.stroke(T.Sky, 3, 0.2),
+		Kit.new("UIScale", { Name = "PopScale" }),
+	})
+	Kit.new("Frame", { Size = UDim2.new(1, 0, 0, 64), BackgroundColor3 = T.PanelLight, Parent = frame }, {
+		Kit.corner(20),
+		Kit.gradient(T.PanelLight, T.Panel),
+	})
+	Kit.label({ Text = title, Size = UDim2.new(1, -140, 0, 44), Position = UDim2.fromOffset(24, 10), TextXAlignment = Enum.TextXAlignment.Left, MaxText = 36, Parent = frame })
+	local close = Kit.button({
+		text = "X",
+		color = T.Red,
+		size = UDim2.fromOffset(48, 48),
+		position = UDim2.new(1, -60, 0, 8),
+		textColor = Color3.new(1, 1, 1),
+		parent = frame,
+		onClick = function()
+			Kit.closeModal()
+		end,
+	})
+	close.Name = "Close"
+	local content = Kit.new("Frame", {
+		Name = "Content",
+		Size = UDim2.new(1, -32, 1, -84),
+		Position = UDim2.fromOffset(16, 72),
+		BackgroundTransparency = 1,
+		Parent = frame,
+	})
+	return frame, content
+end
+
+local modals, current = {}, nil
+
+function Kit.registerModal(name: string, frame, onOpen)
+	modals[name] = { frame = frame, onOpen = onOpen }
+end
+
+function Kit.openModal(name: string)
+	if current == name then
+		Kit.closeModal()
+		return
+	end
+	Kit.closeModal()
+	local m = modals[name]
+	if not m then
+		return
+	end
+	current = name
+	if m.onOpen then
+		m.onOpen()
+	end
+	local pop = m.frame:FindFirstChild("PopScale")
+	if pop then
+		pop.Scale = 0.85
+		Kit.tween(pop, 0.18, { Scale = 1 }, Enum.EasingStyle.Back)
+	end
+	m.frame.Visible = true
+	if GuiService:IsTenFootInterface() or game:GetService("UserInputService").GamepadEnabled then
+		local close = m.frame:FindFirstChild("Close")
+		GuiService.SelectedObject = close
+	end
+end
+
+function Kit.closeModal()
+	if current and modals[current] then
+		modals[current].frame.Visible = false
+	end
+	current = nil
+	GuiService.SelectedObject = nil
+end
+
+function Kit.currentModal(): string?
+	return current
+end
+
+function Kit.formatTime(seconds: number): string
+	seconds = math.max(0, math.floor(seconds))
+	return string.format("%d:%02d", seconds // 60, seconds % 60)
+end
+
+function Kit.comma(n: number): string
+	local s = tostring(math.floor(n))
+	local out = s:reverse():gsub("(%d%d%d)", "%1,"):reverse()
+	return (out:gsub("^,", ""))
+end
+
+return Kit
+]]></string>
+            </Properties>
+          </Item>
+          <Item class="ModuleScript" referent="49">
+            <Properties>
+              <string name="Name">Onboarding</string>
+              <string name="Source"><![CDATA[-- Title splash (main menu), first-time tutorial coach, and toast notifications.
+local Players = game:GetService("Players")
+
+local Kit = require(script.Parent.Kit)
+local State = require(script.Parent.Parent.Controllers.State)
+
+local T = Kit.Theme
+local Onboarding = {}
+
+local STEPS = {
+	[0] = { "WALK OUT OF YOUR ZONE", "Leaving your colored zone draws a glowing trail." },
+	[1] = { "WALK OUT OF YOUR ZONE", "Leaving your colored zone draws a glowing trail." },
+	[2] = { "NOW LOOP BACK HOME!", "Return to your zone to claim everything inside the loop." },
+}
+
+function Onboarding:_splash(gui)
+	local splash = Kit.new("Frame", { Size = UDim2.fromScale(1, 1), BackgroundColor3 = T.Bg, ZIndex = 50, Active = true, Parent = gui }, {
+		Kit.gradient(Color3.fromRGB(30, 22, 70), Color3.fromRGB(12, 10, 28), 90),
+	})
+	local logo = Kit.label({ Size = UDim2.fromOffset(760, 130), Position = UDim2.fromScale(0.5, 0.32), AnchorPoint = Vector2.new(0.5, 0.5), Text = "CHROMA TURF", MaxText = 110, ZIndex = 51, Parent = splash })
+	Kit.new("UIGradient", { Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, T.Mint), ColorSequenceKeypoint.new(0.5, T.Sky), ColorSequenceKeypoint.new(1, T.Pink) }), Parent = logo })
+	Kit.new("UIStroke", { Thickness = 4, Color = Color3.fromRGB(10, 8, 24), Parent = logo })
+	Kit.label({ Size = UDim2.fromOffset(700, 40), Position = UDim2.fromScale(0.5, 0.45), AnchorPoint = Vector2.new(0.5, 0.5), Text = "Draw a loop. Claim the land. Cut their trail.", Font = T.Bold, TextColor3 = T.Sub, MaxText = 28, ZIndex = 51, Parent = splash })
+	local status = Kit.label({ Size = UDim2.fromOffset(500, 30), Position = UDim2.fromScale(0.5, 0.75), AnchorPoint = Vector2.new(0.5, 0.5), Text = "Loading your save...", Font = T.Bold, TextColor3 = T.Sub, MaxText = 20, ZIndex = 51, Parent = splash })
+	local play = Kit.button({ text = "PLAY", color = T.Mint, size = UDim2.fromOffset(260, 80), position = UDim2.fromScale(0.5, 0.62), anchor = Vector2.new(0.5, 0.5), maxText = 44, parent = splash, onClick = function()
+		Kit.tween(splash, 0.35, { BackgroundTransparency = 1 })
+		for _, d in splash:GetDescendants() do
+			if d:IsA("GuiObject") then
+				Kit.tween(d, 0.3, { BackgroundTransparency = 1 })
+			end
+			if d:IsA("TextLabel") then
+				Kit.tween(d, 0.3, { TextTransparency = 1 })
+			end
+			if d:IsA("UIStroke") then
+				Kit.tween(d, 0.3, { Transparency = 1 })
+			end
+		end
+		task.delay(0.4, function()
+			splash:Destroy()
+		end)
+	end })
+	play.ZIndex = 52
+	play.Visible = false
+	local function ready()
+		status.Text = if State.profile.sessions > 1 then "Welcome back, " .. Players.LocalPlayer.DisplayName .. "!" else "Welcome, " .. Players.LocalPlayer.DisplayName .. "!"
+		play.Visible = true
+	end
+	if State.profile then
+		ready()
+	else
+		local conn
+		conn = State.ProfileChanged:Connect(function()
+			conn.Disconnect()
+			ready()
+		end)
+	end
+end
+
+function Onboarding:_coach(gui)
+	local box = Kit.new("Frame", { Size = UDim2.fromOffset(560, 92), Position = UDim2.new(0.5, 0, 0, 78), AnchorPoint = Vector2.new(0.5, 0), BackgroundColor3 = T.Bg, BackgroundTransparency = 0.1, Visible = false, Parent = gui }, { Kit.corner(18), Kit.stroke(T.Mint, 3, 0) })
+	local title = Kit.label({ Size = UDim2.new(1, -24, 0, 42), Position = UDim2.fromOffset(12, 6), TextColor3 = T.Mint, MaxText = 32, Parent = box })
+	local body = Kit.label({ Size = UDim2.new(1, -24, 0, 32), Position = UDim2.fromOffset(12, 50), Font = T.Bold, TextColor3 = T.Text, MaxText = 18, Parent = box })
+	local celebrated = false
+	local function update()
+		local data = State.profile
+		local playing = State:RoundState() == "Playing" and State.mySlot ~= nil
+		if not data or data.tutorialDone then
+			if data and data.tutorialDone and not celebrated and data.tutorialStep == 3 and box.Visible then
+				celebrated = true
+				title.Text, body.Text = "AWESOME! BIGGER LOOPS = MORE TURF", "Walk through a rival's trail to cut it - but guard yours!"
+				task.delay(6, function()
+					box.Visible = false
+				end)
+			elseif not celebrated then
+				box.Visible = false
+			end
+			return
+		end
+		local step = STEPS[data.tutorialStep] or STEPS[0]
+		title.Text, body.Text = step[1], step[2]
+		box.Visible = playing
+	end
+	State.ProfileChanged:Connect(update)
+	State.MatchEvent:Connect(update)
+	State.RosterChanged:Connect(update)
+end
+
+local STYLE = {
+	info = Kit.Theme.Sky,
+	success = Kit.Theme.Mint,
+	gold = Kit.Theme.Gold,
+	level = Kit.Theme.Mint,
+	unlock = Kit.Theme.Pink,
+	achievement = Kit.Theme.Gold,
+	quest = Kit.Theme.Mint,
+}
+
+function Onboarding:_toasts(gui)
+	local stack = Kit.new("Frame", { Size = UDim2.fromOffset(420, 300), Position = UDim2.new(0.5, 0, 1, -70), AnchorPoint = Vector2.new(0.5, 1), BackgroundTransparency = 1, Parent = gui }, {
+		Kit.new("UIListLayout", { Padding = UDim.new(0, 6), VerticalAlignment = Enum.VerticalAlignment.Bottom, HorizontalAlignment = Enum.HorizontalAlignment.Center, SortOrder = Enum.SortOrder.LayoutOrder }),
+	})
+	local n = 0
+	State.Notify:Connect(function(text, style)
+		n += 1
+		local color = STYLE[style] or T.Sky
+		local toast = Kit.new("Frame", { Size = UDim2.fromOffset(420, 46), BackgroundColor3 = T.Bg, BackgroundTransparency = 0.05, LayoutOrder = n, Parent = stack }, { Kit.corner(14), Kit.stroke(color, 2.5, 0) })
+		local l = Kit.label({ Size = UDim2.new(1, -20, 1, -10), Position = UDim2.fromOffset(10, 5), Text = text, Font = T.Bold, TextColor3 = color, TextWrapped = true, MaxText = 18, Parent = toast })
+		local items = {}
+		for _, c in stack:GetChildren() do
+			if c:IsA("Frame") then
+				table.insert(items, c)
+			end
+		end
+		if #items > 4 then
+			items[1]:Destroy()
+		end
+		task.delay(3.5, function()
+			if toast.Parent then
+				Kit.tween(toast, 0.4, { BackgroundTransparency = 1 })
+				Kit.tween(l, 0.4, { TextTransparency = 1 })
+				task.wait(0.45)
+				toast:Destroy()
+			end
+		end)
+	end)
+end
+
+function Onboarding:Start(gui)
+	self:_toasts(gui)
+	self:_coach(gui)
+	self:_splash(gui)
+end
+
+return Onboarding
+]]></string>
+            </Properties>
+          </Item>
+          <Item class="ModuleScript" referent="50">
+            <Properties>
+              <string name="Name">Quests</string>
+              <string name="Source"><![CDATA[-- Daily reward, daily quests, achievements and lifetime stats.
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Config = require(ReplicatedStorage.Shared.Config)
+local Progression = require(ReplicatedStorage.Shared.Progression)
+
+local Kit = require(script.Parent.Kit)
+local State = require(script.Parent.Parent.Controllers.State)
+
+local T = Kit.Theme
+local Quests = {}
+
+function Quests:Render()
+	local data = State.profile
+	if not data then
+		return
+	end
+	for _, c in self.list:GetChildren() do
+		if c:IsA("Frame") then
+			c:Destroy()
+		end
+	end
+	local order = 0
+	local function row(height: number)
+		order += 1
+		return Kit.new("Frame", { Size = UDim2.new(1, -12, 0, height), BackgroundColor3 = T.PanelLight, LayoutOrder = order, Parent = self.list }, { Kit.corner(14) })
+	end
+
+	-- Daily reward
+	local today = Progression.dayNumber(os.time())
+	local canClaim, step, coins = Progression.dailyStatus(data.daily, today)
+	local daily = row(80)
+	Kit.label({ Size = UDim2.new(0.62, 0, 0, 34), Position = UDim2.fromOffset(16, 8), Text = "DAILY GIFT - DAY " .. step .. " of " .. #Config.Economy.DailyRewards, TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = T.Gold, MaxText = 22, Parent = daily })
+	Kit.label({ Size = UDim2.new(0.62, 0, 0, 24), Position = UDim2.fromOffset(16, 44), Text = if canClaim then Kit.comma(coins) .. " coins waiting for you" else "Claimed! New gift tomorrow (missing a day never resets)", Font = T.Body, TextColor3 = T.Sub, TextXAlignment = Enum.TextXAlignment.Left, MaxText = 15, Parent = daily })
+	local dailyBtn = Kit.button({ text = if canClaim then "CLAIM" else "DONE", color = T.Gold, size = UDim2.fromOffset(150, 52), position = UDim2.new(1, -166, 0.5, -26), parent = daily, onClick = function()
+		local res = State:Request("claimDaily")
+		if res.ok then
+			State.Notify:Fire("+" .. res.coins .. " coins!", "gold")
+		end
+	end })
+	Kit.setEnabled(dailyBtn, canClaim, T.Gold)
+
+	-- Quests
+	for _, q in data.quests.list do
+		local def = Progression.quest(q.id)
+		if def then
+			local r = row(84)
+			Kit.label({ Size = UDim2.new(0.62, 0, 0, 30), Position = UDim2.fromOffset(16, 8), Text = def.text, TextXAlignment = Enum.TextXAlignment.Left, MaxText = 22, Parent = r })
+			local barBg = Kit.new("Frame", { Size = UDim2.new(0.55, 0, 0, 16), Position = UDim2.fromOffset(16, 46), BackgroundColor3 = T.Bg, Parent = r }, { Kit.corner(8) })
+			Kit.new("Frame", { Size = UDim2.fromScale(math.clamp(q.progress / def.goal, 0, 1), 1), BackgroundColor3 = T.Mint, Parent = barBg }, { Kit.corner(8) })
+			Kit.label({ Size = UDim2.new(0.2, 0, 0, 20), Position = UDim2.new(0.58, 0, 0, 44), Text = Kit.comma(q.progress) .. "/" .. Kit.comma(def.goal), Font = T.Bold, TextColor3 = T.Sub, MaxText = 15, Parent = r })
+			local ready = q.progress >= def.goal and not q.claimed
+			local btn = Kit.button({ text = if q.claimed then "CLAIMED" elseif ready then "+" .. def.coins else def.coins .. " coins", color = T.Mint, size = UDim2.fromOffset(150, 52), position = UDim2.new(1, -166, 0.5, -26), parent = r, onClick = function()
+				State:Request("claimQuest", q.id)
+			end })
+			Kit.setEnabled(btn, ready, T.Mint)
+		end
+	end
+
+	-- Achievements
+	local header = row(40)
+	header.BackgroundTransparency = 1
+	Kit.label({ Size = UDim2.fromScale(1, 1), Text = "ACHIEVEMENTS", TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = T.Pink, MaxText = 24, Parent = header })
+	for _, a in Progression.Achievements do
+		local done = data.achievements[a.id] ~= nil
+		local r = row(56)
+		r.BackgroundColor3 = if done then T.PanelLight else T.Bg
+		Kit.label({ Size = UDim2.new(0.4, 0, 1, -12), Position = UDim2.fromOffset(16, 6), Text = (if done then "[x] " else "[ ] ") .. a.name, TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = if done then T.Mint else T.Text, MaxText = 20, Parent = r })
+		Kit.label({ Size = UDim2.new(0.58, -16, 1, -12), Position = UDim2.new(0.42, 0, 0, 6), Text = a.desc .. "  (+" .. a.coins .. ")", Font = T.Body, TextColor3 = T.Sub, TextXAlignment = Enum.TextXAlignment.Left, MaxText = 15, Parent = r })
+	end
+
+	local s = data.stats
+	self.stats.Text = string.format("Rounds %s   Wins %s   Trails cut %s   Tiles %s   Best loop %s", Kit.comma(s.rounds), Kit.comma(s.wins), Kit.comma(s.kills), Kit.comma(s.tilesClaimed), Kit.comma(s.bestLoop))
+end
+
+function Quests:Start(gui)
+	local frame, content = Kit.panel(gui, "QUESTS", UDim2.fromOffset(760, 520))
+	self.stats = Kit.label({ Size = UDim2.new(1, 0, 0, 22), Font = T.Bold, TextColor3 = T.Sub, MaxText = 15, Parent = content })
+	self.list = Kit.new("ScrollingFrame", {
+		Size = UDim2.new(1, 0, 1, -30),
+		Position = UDim2.fromOffset(0, 30),
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		ScrollBarThickness = 8,
+		AutomaticCanvasSize = Enum.AutomaticSize.Y,
+		CanvasSize = UDim2.new(),
+		Parent = content,
+	}, { Kit.list(8) })
+	Kit.registerModal("Quests", frame, function()
+		self:Render()
+	end)
+	State.ProfileChanged:Connect(function()
+		if Kit.currentModal() == "Quests" then
+			self:Render()
+		end
+	end)
+end
+
+return Quests
+]]></string>
+            </Properties>
+          </Item>
+          <Item class="ModuleScript" referent="51">
+            <Properties>
+              <string name="Name">Results</string>
+              <string name="Source"><![CDATA[-- End-of-round summary: placement, turf, rewards, level-up and the podium.
+local Kit = require(script.Parent.Kit)
+local State = require(script.Parent.Parent.Controllers.State)
+
+local T = Kit.Theme
+local Results = {}
+
+local function ordinal(n: number): string
+	local suffix = "th"
+	if n % 100 < 11 or n % 100 > 13 then
+		suffix = ({ "st", "nd", "rd" })[n % 10] or "th"
+	end
+	return n .. suffix
+end
+
+function Results:Show(r)
+	self.headline.Text = if r.rank == 1 then "YOU WON!" else ordinal(r.rank) .. " of " .. r.count
+	self.headline.TextColor3 = if r.rank == 1 then T.Gold elseif r.rank <= 3 then T.Mint else T.Text
+	self.stats.Text = string.format("Final turf %.1f%%   Peak %.1f%%   Tiles claimed %s   Trails cut %d", r.percent, r.peak, Kit.comma(r.tiles), r.kills)
+	self.rewards.Text = string.format("+%s coins     +%s XP", Kit.comma(r.coins), Kit.comma(r.xp))
+	self.levelUp.Visible = r.levelAfter > r.levelBefore
+	self.levelUp.Text = "LEVEL UP!  " .. r.levelBefore .. " > " .. r.levelAfter
+	for k = 1, 3 do
+		local e = r.top[k]
+		local l = self.podium[k]
+		l.Visible = e ~= nil
+		if e then
+			l.Text = string.format("%d. %s  %.1f%%", k, e.name, e.percent)
+			l.TextColor3 = Color3.fromRGB(e.color[1], e.color[2], e.color[3])
+		end
+	end
+	Kit.openModal("Results")
+end
+
+function Results:Start(gui)
+	local frame, content = Kit.panel(gui, "ROUND OVER", UDim2.fromOffset(620, 430))
+	self.headline = Kit.label({ Size = UDim2.new(1, 0, 0, 70), MaxText = 64, Parent = content })
+	self.stats = Kit.label({ Size = UDim2.new(1, 0, 0, 26), Position = UDim2.fromOffset(0, 74), Font = T.Bold, TextColor3 = T.Sub, MaxText = 17, Parent = content })
+	self.rewards = Kit.label({ Size = UDim2.new(1, 0, 0, 40), Position = UDim2.fromOffset(0, 106), TextColor3 = T.Gold, MaxText = 32, Parent = content })
+	self.levelUp = Kit.label({ Size = UDim2.new(1, 0, 0, 32), Position = UDim2.fromOffset(0, 148), TextColor3 = T.Mint, Visible = false, MaxText = 28, Parent = content })
+	self.podium = {}
+	for k = 1, 3 do
+		self.podium[k] = Kit.label({ Size = UDim2.new(1, -40, 0, 30), Position = UDim2.fromOffset(20, 184 + (k - 1) * 34), MaxText = 24, Parent = content })
+	end
+	Kit.button({ text = "CONTINUE", color = T.Mint, size = UDim2.fromOffset(220, 56), position = UDim2.new(0.5, 0, 1, -8), anchor = Vector2.new(0.5, 1), parent = content, onClick = function()
+		Kit.closeModal()
+	end })
+	Kit.registerModal("Results", frame)
+	State.MatchEvent:Connect(function(evt)
+		if evt.t == "results" then
+			self:Show(evt)
+		elseif evt.t == "roundStart" and Kit.currentModal() == "Results" then
+			Kit.closeModal()
+		end
+	end)
+end
+
+return Results
+]]></string>
+            </Properties>
+          </Item>
+          <Item class="ModuleScript" referent="52">
+            <Properties>
+              <string name="Name">Settings</string>
+              <string name="Source"><![CDATA[-- Settings: volumes, camera mode, reduced effects. Saved server-side with the profile.
+local Kit = require(script.Parent.Kit)
+local State = require(script.Parent.Parent.Controllers.State)
+
+local T = Kit.Theme
+local Settings = { rows = {} }
+
+local function set(key: string, value)
+	State.profile.settings[key] = value
+	State.ProfileChanged:Fire(State.profile) -- apply instantly, server confirms on next push
+	State:Request("setting", { key = key, value = value })
+end
+
+function Settings:_row(content, order: number, title: string)
+	local r = Kit.new("Frame", { Size = UDim2.new(1, 0, 0, 70), BackgroundColor3 = T.PanelLight, LayoutOrder = order, Parent = content }, { Kit.corner(14) })
+	Kit.label({ Size = UDim2.new(0.45, 0, 0, 34), Position = UDim2.fromOffset(16, 18), Text = title, TextXAlignment = Enum.TextXAlignment.Left, MaxText = 24, Parent = r })
+	return r
+end
+
+function Settings:_volume(content, order: number, title: string, key: string)
+	local r = self:_row(content, order, title)
+	local value = Kit.label({ Size = UDim2.fromOffset(80, 34), Position = UDim2.new(1, -196, 0, 18), MaxText = 24, Parent = r })
+	local function step(delta)
+		local v = math.clamp(math.floor((State.profile.settings[key] + delta) * 10 + 0.5) / 10, 0, 1)
+		set(key, v)
+	end
+	Kit.button({ text = "-", color = T.Sky, size = UDim2.fromOffset(52, 48), position = UDim2.new(1, -256, 0, 11), parent = r, onClick = function()
+		step(-0.1)
+	end })
+	Kit.button({ text = "+", color = T.Sky, size = UDim2.fromOffset(52, 48), position = UDim2.new(1, -108, 0, 11), parent = r, onClick = function()
+		step(0.1)
+	end })
+	self.rows[key] = function(s)
+		value.Text = math.floor(s[key] * 100 + 0.5) .. "%"
+	end
+end
+
+function Settings:_toggle(content, order: number, title: string, key: string, labels, values)
+	local r = self:_row(content, order, title)
+	local _, label = Kit.button({ text = "", color = T.Mint, size = UDim2.fromOffset(240, 48), position = UDim2.new(1, -256, 0, 11), parent = r, onClick = function()
+		local cur = State.profile.settings[key]
+		set(key, if cur == values[1] then values[2] else values[1])
+	end })
+	self.rows[key] = function(s)
+		label.Text = if s[key] == values[1] then labels[1] else labels[2]
+	end
+end
+
+function Settings:Start(gui)
+	local frame, content = Kit.panel(gui, "SETTINGS", UDim2.fromOffset(620, 440))
+	Kit.list(10).Parent = content
+	self:_volume(content, 1, "Sound effects", "sfx")
+	self:_volume(content, 2, "Music", "music")
+	self:_toggle(content, 3, "Camera", "camera", { "TOP-DOWN", "CLASSIC" }, { "top", "classic" })
+	self:_toggle(content, 4, "Effects", "reducedFx", { "REDUCED", "FULL" }, { true, false })
+	Kit.registerModal("Settings", frame, function()
+		self:Render()
+	end)
+	State.ProfileChanged:Connect(function()
+		self:Render()
+	end)
+end
+
+function Settings:Render()
+	local s = State.profile and State.profile.settings
+	if s then
+		for _, fn in self.rows do
+			fn(s)
+		end
+	end
+end
+
+return Settings
+]]></string>
+            </Properties>
+          </Item>
+          <Item class="ModuleScript" referent="53">
+            <Properties>
+              <string name="Name">Shop</string>
+              <string name="Source"><![CDATA[-- Store: cosmetics for coins, coin packs and passes for Robux. Prices always visible; coin buys confirm;
+-- Robux buys use Roblox's own purchase dialog. Never opens by itself.
+local MarketplaceService = game:GetService("MarketplaceService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Config = require(ReplicatedStorage.Shared.Config)
+local Cosmetics = require(ReplicatedStorage.Shared.Cosmetics)
+local Progression = require(ReplicatedStorage.Shared.Progression)
+
+local Kit = require(script.Parent.Kit)
+local State = require(script.Parent.Parent.Controllers.State)
+
+local T = Kit.Theme
+local Shop = { tab = "ink", livePrices = {} }
+
+local TABS = {
+	{ id = "ink", text = "INKS" },
+	{ id = "trail", text = "TRAILS" },
+	{ id = "title", text = "TITLES" },
+	{ id = "coins", text = "COINS" },
+	{ id = "passes", text = "PASSES" },
+}
+
+local function rgb(t)
+	return Color3.fromRGB(t[1], t[2], t[3])
+end
+
+local function achievementName(id: string): string
+	for _, a in Progression.Achievements do
+		if a.id == id then
+			return a.name
+		end
+	end
+	return id
+end
+
+function Shop:_confirm(text: string, onYes)
+	local c = self.confirmFrame
+	c.Visible = true
+	self.confirmText.Text = text
+	self.onConfirm = onYes
+end
+
+function Shop:_card(parent, order: number)
+	local card = Kit.new("Frame", { Size = UDim2.fromOffset(150, 176), BackgroundColor3 = T.PanelLight, LayoutOrder = order, Parent = parent }, { Kit.corner(14), Kit.stroke(Color3.new(0, 0, 0), 2, 0.6) })
+	return card
+end
+
+function Shop:_cosmeticCard(parent, item, order: number)
+	local data, passes = State.profile, State.passes
+	local card = self:_card(parent, order)
+	local preview = Kit.new("Frame", { Size = UDim2.fromOffset(70, 70), Position = UDim2.new(0.5, 0, 0, 12), AnchorPoint = Vector2.new(0.5, 0), BackgroundColor3 = T.Bg, Parent = card }, { Kit.corner(35) })
+	if item.category == "ink" then
+		preview.BackgroundColor3 = rgb(item.color)
+		Kit.stroke(Color3.new(1, 1, 1), 3, 0.2).Parent = preview
+	else
+		Kit.label({ Size = UDim2.fromScale(0.8, 0.8), Position = UDim2.fromScale(0.1, 0.1), Text = if item.category == "trail" then "~" else "Aa", TextColor3 = T.Mint, Parent = preview })
+	end
+	Kit.label({ Size = UDim2.new(1, -12, 0, 26), Position = UDim2.fromOffset(6, 88), Text = if item.name == "" then "No Title" else item.name, MaxText = 18, Parent = card })
+
+	local unlocked = Cosmetics.isUnlocked(data, passes, item)
+	local equipped = data.equipped[item.category] == item.id
+	local u = item.unlock
+	local text, color, enabled, action = "EQUIP", T.Mint, true, nil
+	if equipped then
+		text, enabled = "EQUIPPED", false
+	elseif unlocked then
+		action = function()
+			self:_result(State:Request("equip", item.id))
+		end
+	elseif u.type == "coins" then
+		text, color = "BUY  " .. Kit.comma(u.price), T.Gold
+		enabled = data.coins >= u.price
+		if not enabled then
+			text = Kit.comma(u.price) .. " coins"
+		end
+		action = function()
+			self:_confirm(string.format("Buy %s for %s coins?", item.name, Kit.comma(u.price)), function()
+				self:_result(State:Request("buy", item.id))
+			end)
+		end
+	elseif u.type == "level" then
+		text, enabled = "LEVEL " .. u.level, false
+	elseif u.type == "achievement" then
+		text, enabled = achievementName(u.id), false
+	elseif u.type == "pass" then
+		text, color = "GET PASS", T.Pink
+		action = function()
+			self.tab = "passes"
+			self:Render()
+		end
+	end
+	local btn = Kit.button({ text = text, color = color, size = UDim2.new(1, -16, 0, 40), position = UDim2.new(0, 8, 1, -48), maxText = 16, parent = card, onClick = function()
+		State:Event("storeView", item.id)
+		if action then
+			action()
+		end
+	end })
+	Kit.setEnabled(btn, enabled and action ~= nil, color)
+end
+
+function Shop:_price(kind: string, def): string
+	if def.id == 0 then
+		return "Coming soon"
+	end
+	local live = self.livePrices[def.id]
+	if live == nil then
+		self.livePrices[def.id] = false
+		task.spawn(function()
+			local ok, info = pcall(MarketplaceService.GetProductInfo, MarketplaceService, def.id, if kind == "pass" then Enum.InfoType.GamePass else Enum.InfoType.Product)
+			if ok and info and info.PriceInRobux then
+				self.livePrices[def.id] = info.PriceInRobux
+				if Kit.currentModal() == "Shop" then
+					self:Render()
+				end
+			end
+		end)
+	end
+	return Kit.ROBUX .. " " .. tostring(if live then live else def.price)
+end
+
+function Shop:_robuxCard(parent, kind: string, key: string, def, order: number)
+	local card = self:_card(parent, order)
+	card.Size = UDim2.fromOffset(150, 196)
+	local owned = kind == "pass" and State.passes[key]
+	local headline = if kind == "product" then Kit.comma(def.coins) .. " coins" else def.name
+	Kit.label({ Size = UDim2.new(1, -12, 0, 30), Position = UDim2.fromOffset(6, 10), Text = headline, TextColor3 = if kind == "product" then T.Gold else T.Pink, MaxText = 20, Parent = card })
+	Kit.label({ Size = UDim2.new(1, -16, 0, 88), Position = UDim2.fromOffset(8, 44), Text = if kind == "product" then def.name else def.description, Font = T.Body, TextColor3 = T.Sub, TextWrapped = true, MaxText = 14, Parent = card })
+	local text = if owned then "OWNED" else self:_price(kind, def)
+	local btn = Kit.button({ text = text, color = if owned then T.Mint else T.Gold, size = UDim2.new(1, -16, 0, 42), position = UDim2.new(0, 8, 1, -50), maxText = 18, parent = card, onClick = function()
+		State:Event("storeView", key)
+		local res = State:Request("prompt", { kind = kind, key = key })
+		if not res.ok and res.err == "unavailable" then
+			State.Notify:Fire("This item isn't on sale yet.", "info")
+		end
+	end })
+	Kit.setEnabled(btn, not owned and def.id ~= 0, T.Gold)
+end
+
+function Shop:_result(res)
+	if res.ok then
+		State.Notify:Fire("Done!", "success")
+	elseif res.err == "coins" then
+		State.Notify:Fire("Not enough coins yet - play a round to earn more!", "info")
+	elseif res.err ~= "owned" then
+		State.Notify:Fire("Couldn't do that right now.", "info")
+	end
+end
+
+function Shop:Render()
+	if not State.profile then
+		return
+	end
+	for _, c in self.grid:GetChildren() do
+		if c:IsA("Frame") then
+			c:Destroy()
+		end
+	end
+	for _, b in self.tabButtons do
+		b.btn.BackgroundColor3 = if b.id == self.tab then T.Sky else T.PanelLight
+		b.label.TextColor3 = if b.id == self.tab then Color3.fromRGB(20, 20, 40) else T.Text
+	end
+	self.coinsLabel.Text = "Your coins: " .. Kit.comma(State.profile.coins)
+	local order = 0
+	if Cosmetics.Categories[self.tab] then
+		for _, item in Cosmetics.Categories[self.tab] do
+			order += 1
+			self:_cosmeticCard(self.grid, item, order)
+		end
+	elseif self.tab == "coins" then
+		local keys = {}
+		for key in Config.Monetization.Products do
+			table.insert(keys, key)
+		end
+		table.sort(keys, function(a, b)
+			return Config.Monetization.Products[a].coins < Config.Monetization.Products[b].coins
+		end)
+		for _, key in keys do
+			order += 1
+			self:_robuxCard(self.grid, "product", key, Config.Monetization.Products[key], order)
+		end
+	else
+		for _, key in { "VIP", "DoubleCoins", "PrismPack" } do
+			order += 1
+			self:_robuxCard(self.grid, "pass", key, Config.Monetization.GamePasses[key], order)
+		end
+	end
+	self.note.Visible = self.tab == "coins" or self.tab == "passes"
+end
+
+function Shop:Start(gui)
+	local frame, content = Kit.panel(gui, "SHOP", UDim2.fromOffset(820, 520))
+	local tabs = Kit.new("Frame", { Size = UDim2.new(0, 130, 1, 0), BackgroundTransparency = 1, Parent = content }, { Kit.list(8) })
+	self.tabButtons = {}
+	for k, tab in TABS do
+		local btn, label = Kit.button({ text = tab.text, color = T.PanelLight, textColor = T.Text, size = UDim2.fromOffset(124, 52), layoutOrder = k, maxText = 20, parent = tabs, onClick = function()
+			self.tab = tab.id
+			self:Render()
+		end })
+		table.insert(self.tabButtons, { id = tab.id, btn = btn, label = label })
+	end
+	self.coinsLabel = Kit.label({ Size = UDim2.new(1, -150, 0, 26), Position = UDim2.fromOffset(146, 0), TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = T.Gold, MaxText = 20, Parent = content })
+	self.grid = Kit.new("ScrollingFrame", {
+		Size = UDim2.new(1, -146, 1, -60),
+		Position = UDim2.fromOffset(146, 32),
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		ScrollBarThickness = 8,
+		AutomaticCanvasSize = Enum.AutomaticSize.Y,
+		CanvasSize = UDim2.new(),
+		Parent = content,
+	}, {
+		Kit.new("UIGridLayout", { CellSize = UDim2.fromOffset(150, 196), CellPadding = UDim2.fromOffset(10, 10), SortOrder = Enum.SortOrder.LayoutOrder }),
+		Kit.pad(4),
+	})
+	self.note = Kit.label({ Size = UDim2.new(1, -150, 0, 22), Position = UDim2.new(0, 146, 1, -24), Font = T.Body, TextColor3 = T.Sub, MaxText = 13, Text = "Purchases are optional and cosmetic or coin-boost only - they never decide who wins a round.", Parent = content })
+
+	-- Confirmation dialog for coin purchases.
+	local confirm = Kit.new("Frame", { Size = UDim2.fromOffset(420, 190), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = T.Bg, Visible = false, ZIndex = 5, Parent = frame }, { Kit.corner(18), Kit.stroke(T.Gold, 3, 0) })
+	self.confirmText = Kit.label({ Size = UDim2.new(1, -30, 0, 80), Position = UDim2.fromOffset(15, 14), TextWrapped = true, MaxText = 24, Parent = confirm })
+	Kit.button({ text = "BUY", color = T.Gold, size = UDim2.fromOffset(160, 52), position = UDim2.new(0.5, -170, 1, -70), parent = confirm, onClick = function()
+		confirm.Visible = false
+		if self.onConfirm then
+			self.onConfirm()
+		end
+	end })
+	Kit.button({ text = "CANCEL", color = T.PanelLight, textColor = T.Text, size = UDim2.fromOffset(160, 52), position = UDim2.new(0.5, 10, 1, -70), parent = confirm, onClick = function()
+		confirm.Visible = false
+	end })
+	self.confirmFrame = confirm
+
+	Kit.registerModal("Shop", frame, function()
+		confirm.Visible = false
+		State:Event("storeOpen")
+		self:Render()
+	end)
+	State.ProfileChanged:Connect(function()
+		if Kit.currentModal() == "Shop" then
+			self:Render()
+		end
+	end)
+end
+
+return Shop
+]]></string>
+            </Properties>
+          </Item>
+        </Item>
+      </Item>
+    </Item>
+  </Item>
+  <Item class="Workspace" referent="54">
+    <Properties>
+      <string name="Name">Workspace</string>
+      <float name="Gravity">196.2</float>
+      <bool name="NeedsPivotMigration">false</bool>
+      <bool name="StreamingEnabled">false</bool>
+    </Properties>
+  </Item>
+</roblox>
