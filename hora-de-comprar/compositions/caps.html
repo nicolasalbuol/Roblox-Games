@@ -1,0 +1,28 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; pointer-events: none; }
+    .cap { position: absolute; left: 80px; right: 80px; bottom: 600px; display: flex; flex-direction: column; align-items: center; }
+    .cap b { display: block; padding: 8px 22px; border-radius: 14px 14px 0 0; background: var(--navy); color: var(--gold); font-family: var(--font-body); font-weight: 800; font-size: 30px; letter-spacing: 0.12em; }
+    .cap p { padding: 18px 30px; border-radius: 22px; background: #fff; color: var(--ink); font-family: var(--font-body); font-weight: 800; font-size: 52px; line-height: 1.15; text-align: center; box-shadow: 0 10px 0 rgba(11, 31, 77, 0.35); }
+    .cap.hi { bottom: 1060px; }
+    .cap.loc p { background: var(--gold); color: var(--navy); }
+  </style>
+  <div id="root" data-composition-id="caps" data-width="1080" data-height="1920">
+    <div id="cap1" class="cap hi clip" data-start="12.6" data-duration="1.6"><b>ATENDENTE</b><p>Olá, sejam bem-vindos!</p></div>
+    <div id="cap2" class="cap hi clip" data-start="14.2" data-duration="2.4"><b>ATENDENTE</b><p>Qual relógio chamou a atenção de vocês?</p></div>
+    <div id="cap3" class="cap clip" data-start="19.2" data-duration="2.2"><b>ATENDENTE</b><p>Esse modelo está saindo…</p></div>
+    <div id="cap4" class="cap clip" data-start="21.4" data-duration="2.45"><b>ATENDENTE</b><p>…por apenas <span data-var-text="preco">R$ 99,90</span>!</p></div>
+    <div id="cap5" class="cap clip" data-start="23.85" data-duration="2.2"><b>PAI</b><p>Nossa! Que relógio barato e bonito!</p></div>
+    <div id="cap6" class="cap loc clip" data-start="26.1" data-duration="0.95"><b>LOCUTOR</b><p>Hora de Comprar!</p></div>
+    <div id="cap7" class="cap loc clip" data-start="27.05" data-duration="2.75"><b>LOCUTOR</b><p>Relógios incríveis com preços que cabem no seu bolso!</p></div>
+    <div id="cap8" class="cap loc clip" data-start="29.8" data-duration="2.0"><b>LOCUTOR</b><p>Entrega segura e rápida, loja confiável,</p></div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    for (let i = 1; i <= 8; i++) {
+      const el = document.getElementById("cap" + i);
+      tl.fromTo(`#cap${i} p, #cap${i} b`, { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.18, ease: "power3.out" }, parseFloat(el.dataset.start));
+    }
+    window.__timelines["caps"] = tl;
+  </script>
+</template>

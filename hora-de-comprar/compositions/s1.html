@@ -1,0 +1,76 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: linear-gradient(#5fb4ff 0%, #bfe4ff 55%, #e9f6ff 70%); }
+    #s1-cam { position: absolute; inset: 0; }
+    .s1-cloud { position: absolute; background: #fff; border-radius: 999px; opacity: 0.9; }
+    .s1-cloud::before, .s1-cloud::after { content: ""; position: absolute; background: #fff; border-radius: 50%; }
+    .s1-cloud::before { width: 55%; height: 170%; left: 15%; bottom: 20%; }
+    .s1-cloud::after { width: 40%; height: 130%; left: 50%; bottom: 25%; }
+    #s1-store { position: absolute; left: 70px; top: 360px; width: 940px; height: 990px; background: #f3ece0; border-radius: 18px 18px 0 0; box-shadow: 0 30px 80px rgba(11, 31, 77, 0.25); }
+    #s1-sign { position: absolute; left: 40px; right: 40px; top: 40px; height: 300px; background: var(--navy); border-radius: 20px; border: 8px solid var(--gold); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    #s1-sign .l1, #s1-sign .l2 { font-family: var(--font-display); color: #fff; font-size: 128px; line-height: 1; letter-spacing: 0.01em; }
+    #s1-sign .l2 { color: var(--gold); }
+    #s1-sign-glow { position: absolute; inset: -30px; border-radius: 40px; box-shadow: 0 0 80px 20px rgba(255, 200, 61, 0.65); opacity: 0; }
+    #s1-awning { position: absolute; left: 0; right: 0; top: 370px; height: 110px; background: repeating-linear-gradient(90deg, var(--blue) 0 78px, #fff 78px 156px); border-radius: 0 0 40px 40px; }
+    .s1-window { position: absolute; top: 540px; width: 300px; height: 400px; background: linear-gradient(160deg, #cfe9ff, #8cc4f0); border: 14px solid var(--navy); border-radius: 10px; }
+    .s1-window .w { position: absolute; width: 70px; height: 112px; }
+    #s1-door { position: absolute; left: 370px; top: 520px; width: 200px; height: 470px; background: linear-gradient(160deg, #d9efff, #9ccdf2); border: 14px solid var(--navy); border-bottom: 0; border-radius: 100px 100px 0 0; }
+    #s1-walk { position: absolute; left: 0; right: 0; top: 1350px; bottom: 0; background: #c9c3b8; }
+    #s1-walk::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 26px; background: #a59e92; }
+    #s1-family { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; }
+    .s1-p { position: absolute; }
+  </style>
+  <div id="root" data-composition-id="s1" data-width="1080" data-height="1920">
+    <div id="s1-cam">
+      <div id="s1-c1" class="s1-cloud" style="left: 90px; top: 210px; width: 230px; height: 64px"></div>
+      <div id="s1-c2" class="s1-cloud" style="left: 720px; top: 150px; width: 280px; height: 72px"></div>
+      <div id="s1-store">
+        <div id="s1-sign"><div id="s1-sign-glow"></div><div class="l1">HORA DE</div><div class="l2">COMPRAR</div></div>
+        <div id="s1-awning"></div>
+        <div class="s1-window" style="left: 40px">
+          <div class="w" data-hc="watch:prata" style="left: 40px; top: 60px"></div>
+          <div class="w" data-hc="watch:ouro" style="left: 150px; top: 60px"></div>
+          <div class="w" data-hc="watch:azul" style="left: 95px; top: 210px"></div>
+        </div>
+        <div id="s1-door"></div>
+        <div class="s1-window" style="left: 600px">
+          <div class="w" data-hc="watch:preto" style="left: 40px; top: 60px"></div>
+          <div class="w" data-hc="watch:rose" style="left: 150px; top: 60px"></div>
+          <div class="w" data-hc="watch:prata" style="left: 95px; top: 210px"></div>
+        </div>
+      </div>
+      <div id="s1-walk"></div>
+      <div id="s1-family">
+        <div id="s1-mae" class="s1-p" data-hc="person:mae" style="left: 120px; top: 900px; width: 230px; height: 621px"></div>
+        <div id="s1-filho" class="s1-p" data-hc="person:filho" style="left: 330px; top: 1140px; width: 150px; height: 405px"></div>
+        <div id="s1-pai" class="s1-p" data-hc="person:pai" style="left: 450px; top: 870px; width: 245px; height: 662px"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    HC.mount();
+    const tl = gsap.timeline({ paused: true });
+    // Camera: slow push toward the sign.
+    tl.fromTo("#s1-cam", { scale: 1.06, transformOrigin: "50% 30%" }, { scale: 1.0, duration: 3.2, ease: "power2.out" }, 0);
+    tl.to("#s1-cam", { scale: 1.22, y: 120, duration: 2.6, ease: "power2.inOut" }, 3.3);
+    tl.fromTo("#s1-c1", { x: 0 }, { x: 90, duration: 6, ease: "none" }, 0);
+    tl.fromTo("#s1-c2", { x: 0 }, { x: -70, duration: 6, ease: "none" }, 0);
+    // Sign lights up and pulses twice.
+    tl.fromTo("#s1-sign-glow", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.out" }, 0.2);
+    tl.to("#s1-sign-glow", { opacity: 0.4, duration: 0.6, ease: "sine.inOut", yoyo: true, repeat: 3 }, 0.8);
+    tl.fromTo("#s1-sign .l1", { scale: 0.92 }, { scale: 1, duration: 0.5, ease: "back.out(2)" }, 0.1);
+    tl.fromTo("#s1-sign .l2", { scale: 0.92 }, { scale: 1, duration: 0.5, ease: "back.out(2)" }, 0.22);
+    // Family walks in from the left, already half on screen at frame 0.
+    tl.fromTo("#s1-family", { x: -380 }, { x: 140, duration: 3.6, ease: "power1.out" }, 0);
+    ["#s1-mae", "#s1-filho", "#s1-pai"].forEach((s, i) => HC.walk(tl, s, i * 0.06, 3.4));
+    // They stop and look up at the sign; the boy points.
+    tl.to("#s1-pai .head, #s1-mae .head", { rotation: -6, y: -6, transformOrigin: "50% 90%", duration: 0.5, ease: "power2.out" }, 3.8);
+    tl.to("#s1-filho .head", { rotation: 8, y: -8, transformOrigin: "50% 90%", duration: 0.4, ease: "power2.out" }, 3.9);
+    tl.to("#s1-filho .arm-r", { rotation: -150, transformOrigin: "50% 4%", duration: 0.45, ease: "back.out(1.6)" }, 4.1);
+    HC.blink(tl, "#s1-pai", [1.6, 4.6]);
+    HC.blink(tl, "#s1-mae", [2.3, 5.1]);
+    HC.blink(tl, "#s1-filho", [2.9]);
+    HC.tick(tl, "#s1-store", 0, 6);
+    window.__timelines["s1"] = tl;
+  </script>
+</template>

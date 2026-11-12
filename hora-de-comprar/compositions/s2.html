@@ -1,0 +1,99 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: var(--cream); }
+    #s2-cam { position: absolute; inset: 0; }
+    #s2-wall { position: absolute; left: 0; right: 0; top: 0; height: 1400px; background: linear-gradient(#efe6d6, #f8f3ea); }
+    #s2-stripe { position: absolute; left: 0; right: 0; top: 250px; height: 20px; background: var(--blue); }
+    #s2-floor { position: absolute; left: 0; right: 0; top: 1400px; bottom: 0; background: repeating-linear-gradient(90deg, #b98a5c 0 135px, #a97a4e 135px 140px); }
+    .s2-shelf { position: absolute; top: 470px; width: 300px; height: 18px; background: #8a6440; border-radius: 6px; }
+    .s2-sw { position: absolute; top: 330px; width: 80px; height: 128px; }
+    .s2-case { position: absolute; top: 720px; width: 310px; height: 420px; }
+    .s2-glass { position: absolute; left: 0; right: 0; top: 0; height: 300px; background: linear-gradient(160deg, rgba(220, 240, 255, 0.55), rgba(150, 200, 240, 0.35)); border: 8px solid #c8d3e0; border-radius: 12px 12px 0 0; }
+    .s2-base { position: absolute; left: -10px; right: -10px; top: 300px; height: 120px; background: var(--navy); border-radius: 8px; }
+    .s2-cw { position: absolute; width: 100px; height: 160px; top: 90px; }
+    #s2-burst { position: absolute; left: 5px; top: -60px; width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(rgba(255, 220, 110, 0.95), rgba(255, 200, 61, 0) 70%); opacity: 0; }
+    #s2-blue { position: absolute; left: 95px; top: 40px; width: 120px; height: 192px; }
+    .s2-spark { position: absolute; width: 44px; height: 44px; background: var(--gold); clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); opacity: 0; }
+    #s2-family { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; }
+    .s2-p { position: absolute; }
+    #s2-bang { position: absolute; left: 640px; top: 1240px; width: 110px; height: 110px; border-radius: 50%; background: #fff; border: 6px solid var(--navy); font-family: var(--font-display); font-size: 70px; color: var(--blue); display: flex; align-items: center; justify-content: center; opacity: 0; }
+  </style>
+  <div id="root" data-composition-id="s2" data-width="1080" data-height="1920">
+    <div id="s2-cam">
+      <div id="s2-wall"></div>
+      <div id="s2-stripe"></div>
+      <div class="s2-shelf" style="left: 60px"></div>
+      <div class="s2-shelf" style="left: 720px"></div>
+      <div class="s2-sw" data-hc="watch:preto" style="left: 90px"></div>
+      <div class="s2-sw" data-hc="watch:prata" style="left: 230px"></div>
+      <div class="s2-sw" data-hc="watch:ouro" style="left: 750px"></div>
+      <div class="s2-sw" data-hc="watch:rose" style="left: 890px"></div>
+      <div id="s2-floor"></div>
+      <div class="s2-case" style="left: 40px">
+        <div class="s2-glass"></div>
+        <div class="s2-cw" data-hc="watch:ouro" style="left: 50px"></div>
+        <div class="s2-cw" data-hc="watch:prata" style="left: 165px"></div>
+        <div class="s2-base"></div>
+      </div>
+      <div class="s2-case" style="left: 385px">
+        <div id="s2-burst"></div>
+        <div class="s2-glass"></div>
+        <div id="s2-blue" data-hc="watch:azul"></div>
+        <div id="s2-sp1" class="s2-spark" style="left: 40px; top: 30px"></div>
+        <div id="s2-sp2" class="s2-spark" style="left: 230px; top: 60px"></div>
+        <div id="s2-sp3" class="s2-spark" style="left: 60px; top: 210px"></div>
+        <div id="s2-sp4" class="s2-spark" style="left: 220px; top: 220px"></div>
+        <div class="s2-base"></div>
+      </div>
+      <div class="s2-case" style="left: 730px">
+        <div class="s2-glass"></div>
+        <div class="s2-cw" data-hc="watch:preto" style="left: 50px"></div>
+        <div class="s2-cw" data-hc="watch:rose" style="left: 165px"></div>
+        <div class="s2-base"></div>
+      </div>
+      <div id="s2-family">
+        <div id="s2-mae" class="s2-p" data-hc="person:mae" style="left: 30px; top: 1150px; width: 230px; height: 621px"></div>
+        <div id="s2-filho" class="s2-p" data-hc="person:filho" style="left: 520px; top: 1360px; width: 150px; height: 405px"></div>
+        <div id="s2-pai" class="s2-p" data-hc="person:pai" style="left: 790px; top: 1120px; width: 245px; height: 662px"></div>
+        <div id="s2-bang">!</div>
+      </div>
+    </div>
+  </div>
+  <script>
+    HC.mount();
+    const tl = gsap.timeline({ paused: true });
+    // Enter: family steps in from below, camera settles.
+    tl.fromTo("#s2-cam", { scale: 1.12, transformOrigin: "50% 60%" }, { scale: 1, duration: 1.4, ease: "power3.out" }, 0);
+    tl.fromTo("#s2-family", { y: 160 }, { y: 0, duration: 1.2, ease: "power2.out" }, 0);
+    ["#s2-mae", "#s2-filho", "#s2-pai"].forEach((s) => HC.walk(tl, s, 0, 1.2));
+    // Heads scan the cases: left, then right.
+    tl.to("#s2-mae .head", { rotation: -8, transformOrigin: "50% 90%", duration: 0.5, ease: "sine.inOut" }, 1.3);
+    tl.to("#s2-pai .head", { rotation: 8, transformOrigin: "50% 90%", duration: 0.5, ease: "sine.inOut" }, 1.4);
+    tl.to("#s2-mae .head", { rotation: 6, duration: 0.6, ease: "sine.inOut" }, 2.0);
+    tl.to("#s2-pai .head", { rotation: -6, duration: 0.6, ease: "sine.inOut" }, 2.1);
+    // The blue watch shines.
+    tl.fromTo("#s2-burst", { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1.25, duration: 0.6, ease: "power2.out" }, 2.6);
+    tl.to("#s2-burst", { scale: 1.05, opacity: 0.75, duration: 0.5, ease: "sine.inOut", yoyo: true, repeat: 5 }, 3.2);
+    tl.fromTo("#s2-blue", { scale: 1, rotation: 0 }, { scale: 1.28, rotation: -6, duration: 0.5, ease: "back.out(2.2)" }, 2.6);
+    tl.to("#s2-blue", { rotation: 6, duration: 0.5, ease: "sine.inOut", yoyo: true, repeat: 5 }, 3.1);
+    ["#s2-sp1", "#s2-sp2", "#s2-sp3", "#s2-sp4"].forEach((s, i) => {
+      tl.fromTo(s, { opacity: 0, scale: 0, rotation: 0 }, { opacity: 1, scale: 1, rotation: 90, duration: 0.35, ease: "back.out(3)" }, 2.7 + i * 0.12);
+      tl.to(s, { opacity: 0, scale: 0.3, duration: 0.3, ease: "power2.in" }, 3.4 + i * 0.12);
+      tl.fromTo(s, { opacity: 0, scale: 0 }, { opacity: 1, scale: 0.8, rotation: 180, duration: 0.3, ease: "back.out(3)", immediateRender: false }, 4.3 + i * 0.1);
+    });
+    // Everyone turns to it; the boy gasps.
+    tl.to("#s2-mae .head", { rotation: 12, y: -6, duration: 0.35, ease: "power2.out" }, 2.8);
+    tl.to("#s2-pai .head", { rotation: -12, y: -6, duration: 0.35, ease: "power2.out" }, 2.85);
+    tl.fromTo("#s2-bang", { opacity: 0, scale: 0 }, { opacity: 1, scale: 1, duration: 0.35, ease: "back.out(3)" }, 2.9);
+    tl.to("#s2-bang", { opacity: 0, duration: 0.25 }, 4.4);
+    tl.set("#s2-filho .smile", { opacity: 0 }, 2.9);
+    tl.set("#s2-filho .mouth-open", { opacity: 1 }, 2.9);
+    tl.to("#s2-filho .arm-l", { rotation: 140, transformOrigin: "50% 4%", duration: 0.4, ease: "back.out(1.6)" }, 3.0);
+    // Push into the blue watch to carry into scene 3.
+    tl.to("#s2-cam", { scale: 1.5, transformOrigin: "50% 45%", duration: 1.6, ease: "power2.in" }, 4.4);
+    HC.blink(tl, "#s2-pai", [1.1, 4.0]);
+    HC.blink(tl, "#s2-mae", [1.8]);
+    HC.tick(tl, "#s2-cam", 0, 6);
+    window.__timelines["s2"] = tl;
+  </script>
+</template>
